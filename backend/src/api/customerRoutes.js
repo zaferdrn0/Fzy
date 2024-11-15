@@ -46,10 +46,9 @@ router.post('/add',authenticate, async (req, res) => {
   
   router.get('/list', authenticate, async (req, res) => {
     try {
-      // Tüm kullanıcıları al
+      // Get all customer
       const customers = await Customer.find();
   
-      // Başarılı cevap gönder
       res.status(200).json({ customers });
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -70,12 +69,12 @@ router.post('/add',authenticate, async (req, res) => {
     }
   });
   
-  // Kullanıcı detaylarını güncelleme
+  // Update customer
   router.put('/details/:id', authenticate, async (req, res) => {
     try {
       const customer = await Customer.findByIdAndUpdate(req.params.id, req.body, {
-        new: true, // Güncellenmiş veriyi döndür
-        runValidators: true, // Validation'ı çalıştır
+        new: true, 
+        runValidators: true, 
       });
       
       if (!customer) {
