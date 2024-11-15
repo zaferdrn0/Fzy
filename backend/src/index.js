@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { connectDB } from './config/mongoose.js';
 import { sessionMiddleware } from './config/session.js';
 import userRoutes from './api/userRoutes.js';
+import customerRoutes from './api/customerRoutes.js'; // Import the customer routes
 import { Role } from './models/role.js'; // Import the Role model
 
 const app = express();
@@ -34,6 +35,7 @@ const checkAndCreateRole = async () => {
 checkAndCreateRole();
 
 app.use('/api/user', userRoutes);
+app.use('/api/customer', customerRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}...`);
