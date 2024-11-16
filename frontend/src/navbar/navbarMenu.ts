@@ -15,6 +15,7 @@ export interface MenuItem {
       pathname: '/home',
       icon: 'material-symbols:dashboard-outline',
     },
+
       {
         title: 'Massage',
         pathname: '/massage',
@@ -30,6 +31,7 @@ export interface MenuItem {
       title: 'Customers',
       pathname: '/home/customers',
       icon: 'material-symbols:person-outline',
+
     },
     // ...
   ];
