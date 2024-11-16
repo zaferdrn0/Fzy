@@ -12,7 +12,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <ThemeProvider theme={theme}>
-    <AuthProvider>
       <CssBaseline/>
     <Box sx={{ display: 'flex' }}>
     <Sidebar menuItems={menuItems} />
@@ -20,7 +19,6 @@ export default function App({ Component, pageProps }: AppProps) {
           <Component {...pageProps} />
         </Box>
       </Box>
-    </AuthProvider>
     </ThemeProvider>
   )
 
