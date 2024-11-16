@@ -15,23 +15,23 @@ export interface MenuItem {
       pathname: '/home',
       icon: 'material-symbols:dashboard-outline',
     },
+
+      {
+        title: 'Massage',
+        pathname: '/massage',
+        icon: 'material-symbols:dashboard-outline',
+      },
+      {
+        title: 'Pilates',
+        pathname: '/pilates',
+        icon: 'material-symbols:dashboard-outline',
+      },
     {
       secondaryTitle: 'Management',
       title: 'Customers',
-      pathname: '/Customer',
+      pathname: '/home/customers',
       icon: 'material-symbols:person-outline',
-      children: [
-        {
-          title: 'List',
-          pathname: '/users/list',
-          icon: 'material-symbols:list',
-        },
-        {
-          title: 'Create',
-          pathname: '/users/create',
-          icon: 'material-symbols:person-add',
-        },
-      ],
+
     },
     // ...
   ];
