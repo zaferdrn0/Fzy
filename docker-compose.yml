@@ -37,9 +37,12 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./frontend:/usr/src/app
-      - /usr/src/app/node_modules
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     command: npm run dev
+    stdin_open: true
+    tty: true
 
 volumes:
   mongodb_data:
