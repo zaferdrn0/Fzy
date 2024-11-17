@@ -1,15 +1,15 @@
 import express from 'express';
 import { authenticate } from '../middleware/authentication.js';
-import Customer from '../models/customer.js';
+import { Customer, Service,Event,Payment } from '../models/index.js';
 
 const router = express.Router();
 
-router.get('/list', authenticate, async (req, res) => {
+router.get('/list', async (req, res) => {
   try {
-    const customers = await Customer.find({}, 'name email phone')
+    const customers = await Customer.find({})
       .populate({
         path: 'services',
-        select: 'serviceType', 
+        select: 'serviceType membershipType membershipDuration membershipStartDate',
       });
 
     res.status(200).json(customers);
@@ -18,7 +18,6 @@ router.get('/list', authenticate, async (req, res) => {
     res.status(500).json({ message: 'Error fetching customers.' });
   }
 });
-
 
 router.get('/:id', authenticate, async (req, res) => {
   try {
