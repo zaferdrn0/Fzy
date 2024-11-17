@@ -13,7 +13,7 @@ const CustomerList: NextPage = () => {
     const customers = await fetchBackendGET('/customer/list');
     if(customers.ok){
       const data = await customers.json();
-      return setCustomers(data.customers)
+       setCustomers(data)
     }
   }
   useEffect(() =>{

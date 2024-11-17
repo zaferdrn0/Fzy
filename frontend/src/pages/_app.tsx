@@ -11,6 +11,7 @@ import type { AppProps } from "next/app";
 export default function App({ Component, pageProps }: AppProps) {
 
   return (
+    <AuthProvider>
     <ThemeProvider theme={theme}>
       <CssBaseline/>
     <Box sx={{ display: 'flex' }}>
@@ -20,7 +21,7 @@ export default function App({ Component, pageProps }: AppProps) {
         </Box>
       </Box>
     </ThemeProvider>
+    </AuthProvider>
   )
-
 
 }
