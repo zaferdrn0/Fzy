@@ -12,6 +12,7 @@ const port = process.env.PORT;
 app.use(express.json()); // To process JSON requests
 app.use(sessionMiddleware);
 
+
 const checkAndCreateRole = async () => {
   try {
     // Connect to the database
