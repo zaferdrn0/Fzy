@@ -1,5 +1,5 @@
 // pages/customers/index.tsx
-import { Customer } from '@/models/exampleUser';
+import { Customer } from '@/models/dataType';
 import { getCustomers } from '@/utils/customers/getCustomers';
 import CustomerDashboard from '@/views/pages/customers/CustomersDashboard';
 import { NextPage } from 'next';

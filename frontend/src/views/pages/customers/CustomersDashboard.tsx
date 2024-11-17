@@ -5,7 +5,7 @@ import AddCustomerModal from '@/components/customers/AddCustomer';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { fetchBackendPOST } from '@/utils/backendFetch';
 import { getCustomers } from '@/utils/customers/getCustomers';
-import { Customer } from '@/models/exampleUser';
+import { Customer } from '@/models/dataType';
 
 interface StatCardProps {
   title: string;

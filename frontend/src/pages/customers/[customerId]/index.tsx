@@ -2,11 +2,10 @@
 
 import { useRouter } from 'next/router';
 import { NextPage } from 'next';
-import Link from 'next/link';
-import { Customer, customers } from '@/models/exampleUser';
 import CustomerDetail from '@/views/pages/customers/CustomerDetail';
 import { fetchBackendGET } from '@/utils/backendFetch';
 import { useEffect, useState } from 'react';
+import { Customer } from '@/models/dataType';
 
 const CustomerDetailPage: NextPage = () => {
 

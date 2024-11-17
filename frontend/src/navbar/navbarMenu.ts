@@ -21,21 +21,5 @@ export interface MenuItem {
       pathname: '/customers',
       icon: 'material-symbols:person-outline',
 
-    },
-    {
-      title: 'Massage',
-      pathname: '/massage',
-      icon: 'material-symbols:dashboard-outline',
-    },
-    {
-      title: 'Pilates',
-      pathname: '/pilates',
-      icon: 'material-symbols:dashboard-outline',
-    },
-    {
-      title: 'Physiotherapy',
-      pathname: '/physiotherapy',
-      icon: 'material-symbols:dashboard-outline',
-    },
-    // ...
+    }
   ];
