@@ -22,6 +22,7 @@ import {
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
+import { useAuth } from "@/context/AuthContext";
 
 interface SidebarProps {
   menuItems: MenuItem[];
@@ -37,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
   );
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
+  const { currentUser } = useAuth();
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -343,21 +345,21 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
           alt="User Name"
           src="/path-to-avatar.jpg"
         />
-        {open && (
+        {open && currentUser !==null &&currentUser !== "loading" && (
           <Stack spacing={0.5}>
             <Typography
               variant="subtitle2"
               noWrap
               sx={{ color: "text.primary", fontWeight: 600 }}
             >
-              User Name
+              {currentUser.firstName} {currentUser.lastName}
             </Typography>
             <Typography
               variant="body2"
               noWrap
               sx={{ color: "text.secondary" }}
             >
-              user@example.com
+              {currentUser.email}
             </Typography>
           </Stack>
         )}

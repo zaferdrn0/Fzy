@@ -1,91 +1,81 @@
 import express from 'express';
 import { authenticate } from '../middleware/authentication.js';
-import { Customer } from '../models/customer.js';
+import { Customer, Service,Event,Payment } from '../models/index.js';
 
 const router = express.Router();
 
-// Create Customer route
-router.post('/add',authenticate, async (req, res) => {
-    try {
-      const {
-        firstName, lastName, email, phone, age, weight, type, details
-      } = req.body;
-  
-      // Validate required fields
-      if (!firstName || !lastName || !email || !phone || !age || !weight || !type) {
-        return res.status(400).json({ message: 'All fields are required.' });
-      }
-  
-      // Check if the email already exists
-      const existingCustomer = await Customer.findOne({ email });
-      if (existingCustomer) {
-        return res.status(400).json({ message: 'Email is already registered.' });
-      }
-  
-      // Create new customer
-      const newCustomer = new Customer({
-        name: { first: firstName, last: lastName },
-        email,
-        phone,
-        age,
-        weight,
-        type,
-        details,
+router.get('/list', async (req, res) => {
+  try {
+    const customers = await Customer.find({})
+      .populate({
+        path: 'services',
+        select: 'serviceType membershipType membershipDuration membershipStartDate',
       });
-  
-      // Save the customer to the database
-      await newCustomer.save();
-  
-      // Send success response
-      res.status(201).json({ message: 'Customer created successfully.', customer: newCustomer });
-    } catch (error) {
-      console.error('Error creating customer:', error);
-      res.status(500).json({ message: 'Error creating customer.' });
-    }
-  });
-  
-  router.get('/list', authenticate, async (req, res) => {
-    try {
-      // Get all customer
-      const customers = await Customer.find();
-  
-      res.status(200).json({ customers });
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      res.status(500).json({ message: 'Error fetching customers.' });
-    }
-  });
 
-  router.get('/details/:id', authenticate, async (req, res) => {
-    try {
-      const customer = await Customer.findById(req.params.id);
-      if (!customer) {
-        return res.status(404).json({ message: 'Customer not found' });
-      }
-      res.status(200).json({ customer });
-    } catch (error) {
-      console.error('Error fetching customer details:', error);
-      res.status(500).json({ message: 'Error fetching customer details.' });
-    }
-  });
-  
-  // Update customer
-  router.put('/details/:id', authenticate, async (req, res) => {
-    try {
-      const customer = await Customer.findByIdAndUpdate(req.params.id, req.body, {
-        new: true, 
-        runValidators: true, 
-      });
-      
-      if (!customer) {
-        return res.status(404).json({ message: 'Customer not found' });
-      }
-  
-      res.status(200).json({ message: 'Customer details updated successfully', customer });
-    } catch (error) {
-      console.error('Error updating customer details:', error);
-      res.status(500).json({ message: 'Error updating customer details.' });
-    }
-  });
+    res.status(200).json(customers);
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    res.status(500).json({ message: 'Error fetching customers.' });
+  }
+});
 
-export default router
+router.get('/:id', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const customer = await Customer.findById(id)
+      .populate({
+        path: 'services',
+        populate: [
+          { path: 'events' },
+          { path: 'payments' },
+        ],
+      })
+
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found.' });
+    }
+
+    res.status(200).json(customer);
+  } catch (error) {
+    console.error('Error fetching customer details:', error);
+    res.status(500).json({ message: 'Error fetching customer details.' });
+  }
+});
+
+router.post('/add', async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, birthDate, weight } = req.body;
+
+    // Eksik alanları kontrol et
+    if (!firstName || !lastName || !email || !phone || !birthDate || !weight) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+
+    const existingCustomer = await Customer.findOne({ email });
+    if (existingCustomer) {
+      return res.status(400).json({ message: 'Customer with this email already exists.' });
+    }
+
+    const newCustomer = new Customer({
+      name: {
+        first: firstName,
+        last: lastName,
+      },
+      email,
+      phone,
+      birthDate: new Date(birthDate), 
+      weight: parseFloat(weight),
+    });
+
+
+    await newCustomer.save();
+
+    res.status(201).json({ message: 'Customer created successfully.', customer: newCustomer });
+  } catch (error) {
+    console.error('Error adding customer:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+export default router;

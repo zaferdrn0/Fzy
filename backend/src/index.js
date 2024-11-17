@@ -3,7 +3,8 @@ import 'dotenv/config';
 import { connectDB } from './config/mongoose.js';
 import { sessionMiddleware } from './config/session.js';
 import userRoutes from './api/userRoutes.js';
-import customerRoutes from './api/customerRoutes.js'; // Import the customer routes
+import customerRoutes from './api/customerRoutes.js';
+import serviceRoutes from './api/serviceRoutes.js';
 import { Role } from './models/role.js'; // Import the Role model
 
 const app = express();
@@ -11,6 +12,7 @@ const port = process.env.PORT;
 
 app.use(express.json()); // To process JSON requests
 app.use(sessionMiddleware);
+
 
 const checkAndCreateRole = async () => {
   try {
@@ -36,6 +38,7 @@ checkAndCreateRole();
 
 app.use('/api/user', userRoutes);
 app.use('/api/customer', customerRoutes);
+app.use('/api/service', serviceRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}...`);

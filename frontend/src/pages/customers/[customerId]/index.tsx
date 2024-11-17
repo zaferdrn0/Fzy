@@ -2,40 +2,36 @@
 
 import { useRouter } from 'next/router';
 import { NextPage } from 'next';
-import Link from 'next/link';
-import { customers } from '@/models/exampleUser';
+import CustomerDetail from '@/views/pages/customers/CustomerDetail';
+import { fetchBackendGET } from '@/utils/backendFetch';
+import { useEffect, useState } from 'react';
+import { Customer } from '@/models/dataType';
 
-const CustomerDetail: NextPage = () => {
+const CustomerDetailPage: NextPage = () => {
+
   const router = useRouter();
   const { customerId } = router.query;
+  const [customer, setCustomer] = useState<Customer | null>(null);
 
-  // customers dizisinden ilgili müşteriyi bulun
-  const customer = customers.find((c) => c._id === customerId);
-
-  if (!customer) {
-    return <div>Müşteri bulunamadı.</div>;
+  const getCustomerDetail = async  () =>{
+    const customer = await fetchBackendGET(`/customer/${customerId}`)
+    if(customer.ok){
+      const data = await customer.json();
+      return setCustomer(data)
+    }
   }
 
-  return (
-    <div>
-      <h1>{customer.name.first} {customer.name.last}</h1>
-      <p>Email: {customer.email}</p>
-      <p>Telefon: {customer.phone}</p>
-      <p>Yaş: {customer.age}</p>
-      <p>Kilo: {customer.weight}</p>
+  useEffect(()=>{ 
+    if(customerId){
+      getCustomerDetail()
+    }
+  },[customerId])
 
-      <h2>Aldığı Hizmetler</h2>
-      {customer.services.map((service) => (
-        <div key={service._id}>
-          <h3>Hizmet Türü: {service.serviceType.toUpperCase()}</h3>
-          <p>Toplam Ücret: {service.totalFee}</p>
-          <Link href={`/customers/${customer._id}/services/${service._id}`}>
-            <button>Detaylar</button>
-          </Link>
-        </div>
-      ))}
-    </div>
-  );
+if(customer === null){
+  return <div>Loading...</div>
+}
+
+  return <CustomerDetail customer={customer} />;
 };
 
-export default CustomerDetail;
+export default CustomerDetailPage;
