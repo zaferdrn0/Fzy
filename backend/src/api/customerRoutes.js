@@ -6,7 +6,12 @@ const router = express.Router();
 
 router.get('/list', authenticate, async (req, res) => {
   try {
-    const customers = await Customer.find({}, 'name email phone');
+    // Müşterileri getir ve ilişkili servislerin sadece `serviceType` alanını seç
+    const customers = await Customer.find({}, 'name email phone')
+      .populate({
+        path: 'services',
+        select: 'serviceType', // Sadece serviceType alanını seçiyoruz
+      });
 
     res.status(200).json(customers);
   } catch (error) {
