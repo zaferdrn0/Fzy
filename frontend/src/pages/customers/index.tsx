@@ -1,44 +1,31 @@
 // pages/customers/index.tsx
-
-import { customers } from '@/models/exampleUser';
+import { Customer } from '@/models/exampleUser';
+import { fetchBackendGET } from '@/utils/backendFetch';
+import CustomerDashboard from '@/views/pages/customers/CustomersDashboard';
 import { NextPage } from 'next';
-import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
 
 const CustomerList: NextPage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [customers,setCustomers] = useState<Customer[] | "loading">("loading")
 
-  // customers dizisini import edin veya API'den çekin
-  // Örnek için doğrudan import edelim
-  // import { customers } from '../../data/customers';
-
-  const filteredCustomers = customers.filter((customer) =>
-    `${customer.name.first} ${customer.name.last}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getCustomers = async () =>{
+    const customers = await fetchBackendGET('/customer/list');
+    if(customers.ok){
+      const data = await customers.json();
+      return setCustomers(data.customers)
+    }
+  }
+  useEffect(() =>{
+    getCustomers()
+  },[]);
+  
+  if(customers === "loading"){
+    return <div>Loading...</div>
+  }
 
   return (
-    <div>
-      <h1>Müşteri Listesi</h1>
-      <input
-        type="text"
-        placeholder="Müşteri ara..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      <Link href="/customers/new">
-        <button>Yeni Müşteri Ekle</button>
-      </Link>
-      {filteredCustomers.map((customer) => (
-        <div key={customer._id}>
-          <h2>{customer.name.first} {customer.name.last}</h2>
-          <p>Email: {customer.email}</p>
-          <p>Telefon: {customer.phone}</p>
-          <Link href={`/customers/${customer._id}`}>
-            <button>Detaylar</button>
-          </Link>
-        </div>
-      ))}
-    </div>
+<CustomerDashboard customers={customers}/>
   );
 };
 

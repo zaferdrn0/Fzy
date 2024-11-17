@@ -1,4 +1,3 @@
-import { useRouter } from 'next/router';
 import { useState } from 'react';
 import {
     Box,
@@ -8,7 +7,6 @@ import {
     Card,
     Avatar,
     Button,
-    TextField,
     LinearProgress,
     List,
     ListItem,
@@ -25,6 +23,7 @@ import {
 } from '@mui/material';
 import { Icon } from '@iconify/react';
 import { Session } from 'inspector';
+import { Customer, Event, Payment } from '@/models/exampleUser';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -79,33 +78,20 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
 
     // Tüm seansları ve randevuları birleştir
     const getAllSessionsAndAppointments = () => {
-        const allEvents: Array<(Session | Appointment) & {
-            serviceType: string;
-            type: 'session' | 'appointment';
-        }> = [];
+        const allEvents: Array<Event & { serviceType: string }> = [];
 
         customer.services.forEach(service => {
-            if (service.sessions) {
-                service.sessions.forEach(session => {
-                    allEvents.push({
-                        ...session,
-                        serviceType: service.serviceType,
-                        type: 'session'
-                    });
+            if (service.events) {
+              service.events.forEach(event => {
+                allEvents.push({
+                  ...event,
+                  serviceType: service.serviceType,
                 });
+              });
             }
-            if (service.appointments) {
-                service.appointments.forEach(appointment => {
-                    allEvents.push({
-                        ...appointment,
-                        serviceType: service.serviceType,
-                        type: 'appointment'
-                    });
-                });
-            }
-        });
+          });
 
-        return allEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          return allEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     };
 
     const getStatusColor = (status: string) => {
@@ -332,7 +318,7 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                                                                             height={16}
                                                                             style={{ marginRight: 4 }}
                                                                         />
-                                                                        {`${event.serviceType} - ${event.type}`}
+                                                                        {`${event.serviceType}}`}
                                                                     </Box>
                                                                 }
                                                             />
@@ -455,7 +441,7 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                                         <TableRow>
                                             <TableCell>Date</TableCell>
                                             <TableCell>Service</TableCell>
-                                            <TableCell>Type</TableCell>
+                                      
                                             <TableCell>Status</TableCell>
                                             <TableCell>Notes</TableCell>
                                         </TableRow>
@@ -465,9 +451,7 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                                             <TableRow key={event._id}>
                                                 <TableCell>{new Date(event.date).toLocaleString()}</TableCell>
                                                 <TableCell>{event.serviceType}</TableCell>
-                                                <TableCell>
-                                                    {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-                                                </TableCell>
+                                            
                                                 <TableCell>
                                                     <Chip
                                                         label={event.status}
@@ -513,7 +497,7 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                                 {getAllSessionsAndAppointments().map((event) => (
                                     <ListItem key={event._id}>
                                         <ListItemText
-                                            primary={`${event.serviceType} ${event.type} - ${event.status}`}
+                                            primary={`${event.serviceType} - ${event.status}`}
                                             secondary={`${new Date(event.date).toLocaleString()} ${event.notes ? `- ${event.notes}` : ''}`}
                                         />
                                     </ListItem>

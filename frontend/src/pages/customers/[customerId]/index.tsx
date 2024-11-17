@@ -3,19 +3,34 @@
 import { useRouter } from 'next/router';
 import { NextPage } from 'next';
 import Link from 'next/link';
-import { customers } from '@/models/exampleUser';
+import { Customer, customers } from '@/models/exampleUser';
 import CustomerDetail from '@/views/pages/customers/CustomerDetail';
+import { fetchBackendGET } from '@/utils/backendFetch';
+import { useEffect, useState } from 'react';
 
 const CustomerDetailPage: NextPage = () => {
 
   const router = useRouter();
   const { customerId } = router.query;
+  const [customer, setCustomer] = useState<Customer | null>(null);
 
-  const customer = customers.find(c => c._id === customerId);
-
-  if (!customer) {
-    return <div>Customer not found</div>;
+  const getCustomerDetail = async  () =>{
+    const customer = await fetchBackendGET(`/customer/${customerId}`)
+    if(customer.ok){
+      const data = await customer.json();
+      return setCustomer(data)
+    }
   }
+
+  useEffect(()=>{ 
+    if(customerId){
+      getCustomerDetail()
+    }
+  },[customerId])
+
+if(customer === null){
+  return <div>Loading...</div>
+}
 
   return <CustomerDetail customer={customer} />;
 };
