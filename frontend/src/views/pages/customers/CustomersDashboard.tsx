@@ -1,8 +1,12 @@
 import { Box, Card, CardContent, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Grid } from '@mui/material';
 import { Icon } from '@iconify/react';
 import { useRouter } from 'next/router';
+import AddCustomerModal from '@/components/customers/AddCustomer';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { fetchBackendPOST } from '@/utils/backendFetch';
+import { getCustomers } from '@/utils/customers/getCustomers';
+import { Customer } from '@/models/exampleUser';
 
-// Stat Card için özel tip tanımı
 interface StatCardProps {
   title: string;
   value: number;
@@ -12,22 +16,8 @@ interface StatCardProps {
   color: string;
 }
 
-// Backend'den gelen müşteri tip tanımı
-interface Service {
-  _id: string;
-  serviceType: string;
-  totalFee: number;
-}
 
-interface Customer {
-  _id: string;
-  name: { first: string; last: string };
-  email: string;
-  phone: string;
-  services: Service[];
-}
 
-// Stat Card Bileşeni
 const StatCard = ({ title, value, change, subtitle, icon, color }: StatCardProps) => (
   <Card sx={{ height: '100%' }}>
     <CardContent>
@@ -70,11 +60,22 @@ const StatCard = ({ title, value, change, subtitle, icon, color }: StatCardProps
   </Card>
 );
 
-// Dashboard Bileşeni
-const CustomerDashboard = ({ customers }: { customers: Customer[] }) => {
+const CustomerDashboard = ({ customers,setCustomers }: { customers: Customer[],setCustomers:Dispatch<SetStateAction<Customer[] | "loading">> }) => {
   const router = useRouter();
+  const [modalOpen, setModalOpen] = useState(false);
 
-  // İstatistiklerin hesaplanması
+  const handleOpen = () => setModalOpen(true);
+  const handleClose = () => setModalOpen(false);
+
+  const handleSubmit = async (data: Record<string, any>) => {
+   const addCustomer = await fetchBackendPOST("/customer/add", data)
+   if(addCustomer.ok){
+     console.log("Customer added successfully")
+     handleClose()
+     await getCustomers(setCustomers)
+   }
+  };
+
   const totalCustomers = customers.length;
   const activeServices = customers.reduce((acc, customer) => acc + customer.services.length, 0);
   const totalRevenue = customers.reduce(
@@ -125,7 +126,11 @@ const CustomerDashboard = ({ customers }: { customers: Customer[] }) => {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Stat Cards */}
+      <AddCustomerModal
+        open={modalOpen}
+        onClose={handleClose}
+        onSubmit={handleSubmit}
+      />      {/* Stat Cards */}
       <Grid container spacing={3}>
         {stats.map((stat, index) => (
           <Grid item key={index} lg={3} md={6} sm={12} xs={12}>
@@ -146,6 +151,7 @@ const CustomerDashboard = ({ customers }: { customers: Customer[] }) => {
         <Typography variant="h5">Customers</Typography>
         <Button
           variant="contained"
+          onClick={handleOpen}
           startIcon={<Icon icon="mdi:plus" />}
           sx={{ borderRadius: 2 }}
         >

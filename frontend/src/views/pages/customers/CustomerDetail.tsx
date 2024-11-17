@@ -22,8 +22,9 @@ import {
     TableRow,
 } from '@mui/material';
 import { Icon } from '@iconify/react';
-import { Session } from 'inspector';
 import { Customer, Event, Payment } from '@/models/exampleUser';
+import { calculateAge } from '@/utils/calculateAge';
+import { getMembershipStatus } from '@/utils/isMembershipActive';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -82,16 +83,16 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
 
         customer.services.forEach(service => {
             if (service.events) {
-              service.events.forEach(event => {
-                allEvents.push({
-                  ...event,
-                  serviceType: service.serviceType,
+                service.events.forEach(event => {
+                    allEvents.push({
+                        ...event,
+                        serviceType: service.serviceType,
+                    });
                 });
-              });
             }
-          });
+        });
 
-          return allEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return allEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     };
 
     const getStatusColor = (status: string) => {
@@ -163,7 +164,7 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                             <ListItem>
                                 <ListItemText
                                     primary="Age"
-                                    secondary={customer.age}
+                                    secondary={calculateAge(customer.birthDate)}
                                 />
                             </ListItem>
                             <ListItem>
@@ -253,11 +254,20 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                                                             <Typography variant="body2" color="text.secondary">
                                                                 Toplam Ücret: {service.totalFee} TL
                                                             </Typography>
-                                                            {service.membershipDuration && (
+                                                            {service.membershipStartDate && (
                                                                 <Typography variant="body2" color="text.secondary">
-                                                                    Kalan Süre: {service.membershipDuration} ay
+                                                                    {(() => {
+                                                                        const { isActive, daysLeft } = getMembershipStatus(
+                                                                            service.membershipStartDate,
+                                                                            service.membershipDuration
+                                                                        );
+                                                                        return isActive
+                                                                            ? `Kalan Süre: ${Math.ceil(daysLeft / 30)} ay (${daysLeft} gün)`
+                                                                            : 'Expired';
+                                                                    })()}
                                                                 </Typography>
                                                             )}
+
                                                         </Box>
                                                         {service.trainerNotes && (
                                                             <Typography variant="body2" color="text.secondary">
@@ -398,36 +408,50 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                                             <TableCell>Details</TableCell>
                                             <TableCell>Total Fee</TableCell>
                                             <TableCell>Start Date</TableCell>
+                                            <TableCell>Days Left</TableCell> {/* Yeni sütun eklendi */}
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {customer.services.map((service) => (
-                                            <TableRow key={service._id}>
-                                                <TableCell>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                        <Icon
-                                                            icon={
-                                                                service.serviceType === 'pilates' ? 'mdi:yoga' :
-                                                                    service.serviceType === 'massage' ? 'mdi:hand-heart' :
-                                                                        'mdi:doctor'
-                                                            }
-                                                            width={24}
-                                                            height={24}
-                                                        />
-                                                        <Typography sx={{ ml: 1 }}>
-                                                            {service.serviceType.charAt(0).toUpperCase() + service.serviceType.slice(1)}
-                                                        </Typography>
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {service.membershipType && `Membership: ${service.membershipType}`}
-                                                    {service.massageType && `Type: ${service.massageType}`}
-                                                    {service.injuryType && `Injury: ${service.injuryType}`}
-                                                </TableCell>
-                                                <TableCell>{service.totalFee} TL</TableCell>
-                                                <TableCell>{new Date(service.createdAt).toLocaleDateString()}</TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {customer.services.map((service) => {
+
+                                            const { isActive, daysLeft } = getMembershipStatus(
+                                                service.membershipStartDate || '',
+                                                service.membershipDuration
+                                            );
+                                            // Üyelik durumunu ve kalan gün sayısını hesaplıyoruz
+                                            return (
+                                                <TableRow key={service._id}>
+                                                    <TableCell>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <Icon
+                                                                icon={
+                                                                    service.serviceType === 'pilates'
+                                                                        ? 'mdi:yoga'
+                                                                        : service.serviceType === 'massage'
+                                                                            ? 'mdi:hand-heart'
+                                                                            : 'mdi:doctor'
+                                                                }
+                                                                width={24}
+                                                                height={24}
+                                                            />
+                                                            <Typography sx={{ ml: 1 }}>
+                                                                {service.serviceType.charAt(0).toUpperCase() + service.serviceType.slice(1)}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {service.membershipType && `Membership: ${service.membershipType}`}
+                                                        {service.massageType && `Type: ${service.massageType}`}
+                                                        {service.injuryType && `Injury: ${service.injuryType}`}
+                                                    </TableCell>
+                                                    <TableCell>{service.totalFee} TL</TableCell>
+                                                    <TableCell>{new Date(service.createdAt).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        {service.membershipStartDate ? isActive ? `${daysLeft} days left` : 'Expired' : 0}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
@@ -441,7 +465,7 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                                         <TableRow>
                                             <TableCell>Date</TableCell>
                                             <TableCell>Service</TableCell>
-                                      
+
                                             <TableCell>Status</TableCell>
                                             <TableCell>Notes</TableCell>
                                         </TableRow>
@@ -451,7 +475,7 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                                             <TableRow key={event._id}>
                                                 <TableCell>{new Date(event.date).toLocaleString()}</TableCell>
                                                 <TableCell>{event.serviceType}</TableCell>
-                                            
+
                                                 <TableCell>
                                                     <Chip
                                                         label={event.status}

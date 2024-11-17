@@ -1,6 +1,6 @@
 // pages/customers/index.tsx
 import { Customer } from '@/models/exampleUser';
-import { fetchBackendGET } from '@/utils/backendFetch';
+import { getCustomers } from '@/utils/customers/getCustomers';
 import CustomerDashboard from '@/views/pages/customers/CustomersDashboard';
 import { NextPage } from 'next';
 import { useEffect, useState } from 'react';
@@ -9,15 +9,8 @@ import { useEffect, useState } from 'react';
 const CustomerList: NextPage = () => {
   const [customers,setCustomers] = useState<Customer[] | "loading">("loading")
 
-  const getCustomers = async () =>{
-    const customers = await fetchBackendGET('/customer/list');
-    if(customers.ok){
-      const data = await customers.json();
-       setCustomers(data)
-    }
-  }
   useEffect(() =>{
-    getCustomers()
+    getCustomers(setCustomers)
   },[]);
   
   if(customers === "loading"){
@@ -25,7 +18,7 @@ const CustomerList: NextPage = () => {
   }
 
   return (
-<CustomerDashboard customers={customers}/>
+<CustomerDashboard customers={customers} setCustomers = {setCustomers}/>
   );
 };
 

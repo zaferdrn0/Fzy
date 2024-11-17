@@ -8,7 +8,7 @@ export interface Customer {
   };
   email: string;
   phone: string;
-  age: number;
+  birthDate: string;
   weight: number;
   services: Service[];
   createdAt: string;
@@ -27,7 +27,8 @@ export interface Service {
   serviceType: 'pilates' | 'physiotherapy' | 'massage';
   // Hizmete özgü alanlar
   membershipType?: 'basic' | 'premium';
-  membershipDuration?: number; // Üyelik süresi (ay olarak)
+  membershipDuration?: number; 
+  membershipStartDate?: string;
   trainerNotes?: string;
   medicalHistory?: string;
   injuryType?: string;
@@ -59,7 +60,7 @@ const customer1: Customer = {
   },
   email: 'ali.yilmaz@example.com',
   phone: '+905551112233',
-  age: 35,
+  birthDate: '1988-05-15',
   weight: 78,
   services: [], // Hizmetler daha sonra eklenecek
   createdAt: '2023-07-01T08:00:00Z',
@@ -167,7 +168,7 @@ massageService1.events = [massageEvent1, massageEventFuture];
     },
     email: 'ayse.kaya@example.com',
     phone: '+905551223344',
-    age: 28,
+    birthDate: '1988-05-15',
     weight: 62,
     services: [], // Hizmetler daha sonra eklenecek
     createdAt: '2023-07-02T08:00:00Z',
