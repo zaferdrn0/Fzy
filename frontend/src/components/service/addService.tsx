@@ -24,6 +24,12 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
     membershipDuration: '',
     totalFee: '',
     trainerNotes: '',
+    medicalHistory: '',
+    injuryType: '',
+    doctorNotes: '',
+    massageType: '',
+    preferences: '',
+    membershipStartDate: new Date().toISOString().slice(0, 10), // Varsayılan olarak bugünün tarihi
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -36,17 +42,87 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit(formData); 
-    setFormData({ serviceType: '', membershipType: '', membershipDuration: '', totalFee: '', trainerNotes: '' }); 
-    onClose(); 
+    onSubmit(formData);
+    setFormData({
+      serviceType: '',
+      membershipType: '',
+      membershipDuration: '',
+      totalFee: '',
+      trainerNotes: '',
+      medicalHistory: '',
+      injuryType: '',
+      doctorNotes: '',
+      massageType: '',
+      preferences: '',
+      membershipStartDate: new Date().toISOString().slice(0, 10), // Sıfırlandığında bugünkü tarih atanır
+    });
+    onClose();
+  };
+
+  const renderAdditionalFields = () => {
+    switch (formData.serviceType) {
+      case 'physiotherapy':
+        return (
+          <>
+            <Grid item xs={12}>
+              <TextField
+                label="Medical History"
+                name="medicalHistory"
+                value={formData.medicalHistory}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Injury Type"
+                name="injuryType"
+                value={formData.injuryType}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Doctor Notes"
+                name="doctorNotes"
+                value={formData.doctorNotes}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+          </>
+        );
+      case 'massage':
+        return (
+          <>
+            <Grid item xs={12}>
+              <TextField
+                label="Massage Type"
+                name="massageType"
+                value={formData.massageType}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Preferences"
+                name="preferences"
+                value={formData.preferences}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+          </>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      closeAfterTransition
-    >
+    <Modal open={open} onClose={onClose} closeAfterTransition>
       <Fade in={open}>
         <Paper
           elevation={3}
@@ -82,12 +158,11 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
               <Grid item xs={12}>
                 <TextField
                   select
-                  label="Membership Type"
+                  label="Membership Type (Optional)"
                   name="membershipType"
                   value={formData.membershipType}
                   onChange={handleChange}
                   fullWidth
-                  required
                 >
                   <MenuItem value="basic">Basic</MenuItem>
                   <MenuItem value="premium">Premium</MenuItem>
@@ -95,24 +170,32 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Membership Duration (Days)"
+                  label="Membership Duration (Days) (Optional)"
                   name="membershipDuration"
                   type="number"
                   value={formData.membershipDuration}
                   onChange={handleChange}
                   fullWidth
-                  required
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Total Fee"
+                  label="Total Fee (Optional)"
                   name="totalFee"
                   type="number"
                   value={formData.totalFee}
                   onChange={handleChange}
                   fullWidth
-                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Membership Start Date"
+                  name="membershipStartDate"
+                  type="date"
+                  value={formData.membershipStartDate}
+                  onChange={handleChange}
+                  fullWidth
                 />
               </Grid>
               <Grid item xs={12}>
@@ -124,6 +207,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
                   fullWidth
                 />
               </Grid>
+              {renderAdditionalFields()}
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <Button onClick={onClose} sx={{ mr: 2 }}>
