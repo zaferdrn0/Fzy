@@ -23,6 +23,7 @@ export interface Customer {
   services: Service[];
   createdAt: string;
   updatedAt: string;
+  isActive: boolean;
 }
 
 // Ödeme arayüzü
@@ -49,7 +50,7 @@ export interface Service {
   preferences?: string;
   totalFee: number;
   payments: Payment[];
-  events?: Event[]; // Tek bir etkinlik dizisi
+  events: Event[]; // Tek bir etkinlik dizisi
   createdAt: string;
   updatedAt: string;
 }
