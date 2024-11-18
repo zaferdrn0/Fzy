@@ -4,7 +4,7 @@ import { Customer, Service,Event,Payment } from '../models/index.js';
 
 const router = express.Router();
 
-router.get('/list', async (req, res) => {
+router.get('/list',authenticate, async (req, res) => {
   try {
     const customers = await Customer.find({})
       .populate({
@@ -43,11 +43,10 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-router.post('/add', async (req, res) => {
+router.post('/add',authenticate, async (req, res) => {
   try {
     const { firstName, lastName, email, phone, birthDate, weight } = req.body;
 
-    // Eksik alanları kontrol et
     if (!firstName || !lastName || !email || !phone || !birthDate || !weight) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
@@ -75,6 +74,26 @@ router.post('/add', async (req, res) => {
   } catch (error) {
     console.error('Error adding customer:', error);
     res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+router.put('/:customerId', async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const updatedData = req.body;
+
+    const updatedCustomer = await Customer.findByIdAndUpdate(customerId, updatedData, {
+      new: true, 
+    });
+
+    if (!updatedCustomer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    res.status(200).json({ message: 'Customer updated successfully', customer: updatedCustomer });
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

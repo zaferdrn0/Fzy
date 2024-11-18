@@ -1,15 +1,16 @@
 import express from 'express';
-import { Customer, Service ,Event} from '../models/index.js'; 
+import { Customer, Service } from '../models/index.js';
+import { authenticate } from '../middleware/authentication.js';
 
 const router = express.Router();
 
-router.post('/add/:customerId', async (req, res) => {
+router.post('/add/:customerId', authenticate, async (req, res) => {
   try {
     const { customerId } = req.params;
-    const { serviceType, membershipType, membershipDuration, totalFee, trainerNotes } = req.body;
+    const { serviceType, membershipType, membershipDuration, totalFee, trainerNotes, membershipStartDate } = req.body;
 
-    if (!serviceType || !membershipType || !membershipDuration || !totalFee) {
-      return res.status(400).json({ message: 'All fields are required.' });
+    if (!serviceType) {
+      return res.status(400).json({ message: 'Service type is required.' });
     }
 
     const customer = await Customer.findById(customerId);
@@ -20,11 +21,11 @@ router.post('/add/:customerId', async (req, res) => {
     const newService = new Service({
       customer: customerId,
       serviceType,
-      membershipType,
-      membershipDuration,
-      totalFee,
-      trainerNotes,
-      membershipStartDate: new Date(),
+      membershipType: membershipType || null,
+      membershipDuration: membershipDuration || null,
+      totalFee: totalFee || null,
+      trainerNotes: trainerNotes || null,
+      membershipStartDate: membershipStartDate || new Date(), // Varsayılan tarih atanır
     });
 
     await newService.save();
