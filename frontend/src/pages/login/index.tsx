@@ -46,5 +46,6 @@ const Login = () => {
     </form>
   );
 };
+Login.getLayout = (page: React.ReactElement) => page;
 
 export default Login;

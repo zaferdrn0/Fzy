@@ -16,8 +16,6 @@ interface StatCardProps {
   color: string;
 }
 
-
-
 const StatCard = ({ title, value, change, subtitle, icon, color }: StatCardProps) => (
   <Card sx={{ height: '100%' }}>
     <CardContent>
@@ -60,7 +58,7 @@ const StatCard = ({ title, value, change, subtitle, icon, color }: StatCardProps
   </Card>
 );
 
-const CustomerDashboard = ({ customers,setCustomers }: { customers: Customer[],setCustomers:Dispatch<SetStateAction<Customer[] | "loading">> }) => {
+const CustomerDashboard = ({ customers, setCustomers }: { customers: Customer[], setCustomers: Dispatch<SetStateAction<Customer[] | "loading">> }) => {
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -68,12 +66,12 @@ const CustomerDashboard = ({ customers,setCustomers }: { customers: Customer[],s
   const handleClose = () => setModalOpen(false);
 
   const handleSubmit = async (data: Record<string, any>) => {
-   const addCustomer = await fetchBackendPOST("/customer/add", data)
-   if(addCustomer.ok){
-     console.log("Customer added successfully")
-     handleClose()
-     await getCustomers(setCustomers)
-   }
+    const addCustomer = await fetchBackendPOST("/customer/add", data);
+    if (addCustomer.ok) {
+      console.log("Customer added successfully");
+      handleClose();
+      await getCustomers(setCustomers);
+    }
   };
 
   const totalCustomers = customers.length;
@@ -130,7 +128,8 @@ const CustomerDashboard = ({ customers,setCustomers }: { customers: Customer[],s
         open={modalOpen}
         onClose={handleClose}
         onSubmit={handleSubmit}
-      />      {/* Stat Cards */}
+      />
+      {/* Stat Cards */}
       <Grid container spacing={3}>
         {stats.map((stat, index) => (
           <Grid item key={index} lg={3} md={6} sm={12} xs={12}>
@@ -168,6 +167,7 @@ const CustomerDashboard = ({ customers,setCustomers }: { customers: Customer[],s
               <TableCell>Phone</TableCell>
               <TableCell>Services</TableCell>
               <TableCell>Total Spent</TableCell>
+              <TableCell>Active Status</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -186,10 +186,16 @@ const CustomerDashboard = ({ customers,setCustomers }: { customers: Customer[],s
                   $
                   {customer.services.reduce((acc, service) => acc + service.totalFee, 0).toFixed(2)}
                 </TableCell>
+                <TableCell>
+                  <Typography
+                    sx={{
+                      color: customer.isActive ? 'success.main' : 'error.main',
+                    }}
+                  >
+                    {customer.isActive ? 'Active' : 'Inactive'}
+                  </Typography>
+                </TableCell>
                 <TableCell align="right">
-                  <IconButton size="small">
-                    <Icon icon="mdi:pencil" />
-                  </IconButton>
                   <IconButton size="small">
                     <Icon icon="mdi:delete" />
                   </IconButton>

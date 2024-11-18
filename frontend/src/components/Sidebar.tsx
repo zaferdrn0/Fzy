@@ -49,8 +49,6 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
   };
 
   const customSidebar = {
-    width: 280,
-    closedWidth: 88,
     transition: "width 200ms cubic-bezier(0.4, 0, 0.2, 1)",
   };
 
@@ -406,7 +404,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
       }}
       sx={{
         flexShrink: 0,
-        width: open ? customSidebar.width : customSidebar.closedWidth,
+        
         transition: customSidebar.transition,
         position: isMdUp ? 'relative' : !isMdUp && open ? 'absolute' : 'relative', 
         zIndex: !isMdUp && open ? theme.zIndex.drawer + 1 : 'auto',
@@ -420,7 +418,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
         open={open}
         PaperProps={{
           sx: {
-            width: open ? customSidebar.width : customSidebar.closedWidth,
+          
             transition: customSidebar.transition,
             bgcolor: "background.paper",
             borderRight: "1px dashed",

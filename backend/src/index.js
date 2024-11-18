@@ -5,7 +5,9 @@ import { sessionMiddleware } from './config/session.js';
 import userRoutes from './api/userRoutes.js';
 import customerRoutes from './api/customerRoutes.js';
 import serviceRoutes from './api/serviceRoutes.js';
-import { Role } from './models/role.js'; // Import the Role model
+import eventRoutes from './api/eventRoutes.js';
+import paymentRoutes from './api/paymentRoutes.js';
+import { Role } from './models/role.js';
 
 const app = express();
 const port = process.env.PORT;
@@ -39,6 +41,8 @@ checkAndCreateRole();
 app.use('/api/user', userRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/service', serviceRoutes);
+app.use('/api/event', eventRoutes);
+app.use('/api/payment', paymentRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}...`);

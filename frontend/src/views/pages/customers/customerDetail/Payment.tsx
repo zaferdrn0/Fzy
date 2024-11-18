@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Customer } from '@/models/dataType';
 import {
   TableContainer,
   Table,
@@ -7,43 +6,29 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Chip,
   Button,
   Modal,
   Box,
   TextField,
   MenuItem,
 } from '@mui/material';
+import { Customer } from '@/models/dataType';
 import { useRouter } from 'next/router';
 import { fetchBackendPOST } from '@/utils/backendFetch';
 
-const EventTab = ({ customer }: { customer: Customer }) => {
+const PaymentTab = ({ customer }: { customer: Customer }) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
+    amount: '',
     date: '',
-    status: '',
-    notes: '',
     service: '',
   });
   const router = useRouter();
   const customerId = router.query.customerId as string;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'attended':
-        return 'success';
-      case 'missed':
-        return 'error';
-      case 'scheduled':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
-
-  const allEvents = customer.services.flatMap((service) =>
-    service?.events?.map((event) => ({
-      ...event,
+  const allPayments = customer.services.flatMap((service) =>
+    service.payments.map((payment) => ({
+      ...payment,
       serviceType: service.serviceType,
     }))
   );
@@ -54,25 +39,25 @@ const EventTab = ({ customer }: { customer: Customer }) => {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
+    e.preventDefault();
     try {
-      const response = await fetchBackendPOST(`/event/add/${customerId}`, {
+      const response = await fetchBackendPOST(`/payment/add/${customerId}`, {
+        amount: formData.amount,
         date: formData.date,
-        status: formData.status,
-        notes: formData.notes,
         service: formData.service,
       });
-      if (!response.ok) throw new Error('Failed to add event');
+      if (!response.ok) throw new Error('Failed to add payment');
       setOpen(false);
+      window.location.reload(); // Yeni ödeme görünmesi için sayfayı yenile
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('Error creating payment:', error);
     }
   };
 
   return (
     <>
       <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
-        Add Event
+        Add Payment
       </Button>
       <Modal open={open} onClose={() => setOpen(false)}>
         <Box
@@ -81,44 +66,32 @@ const EventTab = ({ customer }: { customer: Customer }) => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 600,
+            width: 400,
             bgcolor: 'background.paper',
-          
+            border: '2px solid #000',
             boxShadow: 24,
             p: 4,
           }}
         >
-          <h2>Create Event</h2>
+          <h2>Add Payment</h2>
           <form onSubmit={handleSubmit}>
             <TextField
+              name="amount"
+              label="Amount"
+              type="number"
+              fullWidth
+              margin="normal"
+              value={formData.amount}
+              onChange={handleInputChange}
+            />
+            <TextField
               name="date"
-              type="datetime-local"
               label="Date"
+              type="datetime-local"
               fullWidth
               margin="normal"
               InputLabelProps={{ shrink: true }}
               value={formData.date}
-              onChange={handleInputChange}
-            />
-            <TextField
-              name="status"
-              select
-              label="Status"
-              fullWidth
-              margin="normal"
-              value={formData.status}
-              onChange={handleInputChange}
-            >
-              <MenuItem value="attended">Attended</MenuItem>
-              <MenuItem value="missed">Missed</MenuItem>
-              <MenuItem value="scheduled">Scheduled</MenuItem>
-            </TextField>
-            <TextField
-              name="notes"
-              label="Notes"
-              fullWidth
-              margin="normal"
-              value={formData.notes}
               onChange={handleInputChange}
             />
             <TextField
@@ -131,7 +104,7 @@ const EventTab = ({ customer }: { customer: Customer }) => {
               onChange={handleInputChange}
             >
               {customer.services.map((service) => (
-                <MenuItem key={service.serviceType} value={service.serviceType}>
+                <MenuItem key={service._id} value={service._id}>
                   {service.serviceType}
                 </MenuItem>
               ))}
@@ -148,19 +121,15 @@ const EventTab = ({ customer }: { customer: Customer }) => {
             <TableRow>
               <TableCell>Date</TableCell>
               <TableCell>Service</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Notes</TableCell>
+              <TableCell>Amount</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {allEvents.map((event) => (
-              <TableRow key={event._id}>
-                <TableCell>{new Date(event.date).toLocaleString()}</TableCell>
-                <TableCell>{event.serviceType}</TableCell>
-                <TableCell>
-                  <Chip label={event.status} color={getStatusColor(event.status)} size="small" />
-                </TableCell>
-                <TableCell>{event.notes || '-'}</TableCell>
+            {allPayments.map((payment, index) => (
+              <TableRow key={index}>
+                <TableCell>{new Date(payment.date).toLocaleString()}</TableCell>
+                <TableCell>{payment.serviceType}</TableCell>
+                <TableCell>{payment.amount} TL</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -170,4 +139,4 @@ const EventTab = ({ customer }: { customer: Customer }) => {
   );
 };
 
-export default EventTab;
+export default PaymentTab;

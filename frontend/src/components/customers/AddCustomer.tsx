@@ -8,7 +8,6 @@ import {
   Paper,
   Modal,
   Fade,
-  Backdrop,
 } from '@mui/material';
 
 interface AddCustomerModalProps {
@@ -37,9 +36,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ open, onClose, onSu
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit(formData); // Form verisini gönder
+    onSubmit(formData); 
     setFormData({ firstName: '', lastName: '', email: '', phone: '', birthDate: '', weight: '' }); // Formu temizle
-    onClose(); // Modalı kapat
+    onClose(); 
   };
 
   return (
@@ -47,10 +46,6 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ open, onClose, onSu
       open={open}
       onClose={onClose}
       closeAfterTransition
-      BackdropComponent={Backdrop}
-      BackdropProps={{
-        timeout: 500,
-      }}
     >
       <Fade in={open}>
         <Paper
