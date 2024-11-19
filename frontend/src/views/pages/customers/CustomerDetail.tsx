@@ -8,21 +8,14 @@ import {
     ListItem,
     ListItemText,
     Grid,
-    TableContainer,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
 } from '@mui/material';
 import { Icon } from '@iconify/react';
-import { Customer, Event, Payment } from '@/models/dataType';
+import { Customer } from '@/models/dataType';
 import UserInfoCard from './customerDetail/UserInfoCard';
 import MemberShipDetail from './customerDetail/MemberShipDetail';
-
-import Service from './customerDetail/Service';
 import EventTab from './customerDetail/Event';
 import PaymentTab from './customerDetail/Payment';
+import ServiceTab from './customerDetail/Service';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -128,7 +121,7 @@ const CustomerDetail = ({ customer }: CustomerDetailProps) => {
                             -
                             <Grid item lg={12}>
                                 <TabPanel value={tabValue} index={1}>
-                                    <Service customer={customer} />
+                                    <ServiceTab customer={customer} />
                                 </TabPanel>
                             </Grid>
                         </Grid>

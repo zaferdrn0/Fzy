@@ -1,25 +1,36 @@
-import AddServiceModal from '@/components/service/addService';
-import { Customer } from '@/models/dataType';
-import { fetchBackendPOST } from '@/utils/backendFetch';
+import AddServiceModal from '@/components/service/AddService';
+import UpdateServiceModal from '@/components/service/UpdateService';
+import { Customer, Service } from '@/models/dataType';
+import { fetchBackendPOST, fetchBackendPUT, fetchBackendDELETE } from '@/utils/backendFetch';
 import { getMembershipStatus } from '@/utils/isMembershipActive';
 import { Icon } from '@iconify/react/dist/iconify.js';
-import { Box, Button, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Typography, Chip } from '@mui/material';
+import { Box, Button, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Typography, Chip, IconButton, Tooltip } from '@mui/material';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 
-const Service = ({ customer }: { customer: Customer }) => {
+
+const ServiceTab = ({ customer }: { customer: Customer }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
   const router = useRouter();
   const { customerId } = router.query;
 
   const handleOpen = () => setModalOpen(true);
   const handleClose = () => setModalOpen(false);
 
-  const handleSubmit = async (data: Record<string, any>) => {
+  const handleUpdateModalOpen = (service: Service) => {
+    setSelectedService(service);
+    setUpdateModalOpen(true);
+  };
+  const handleUpdateModalClose = () => setUpdateModalOpen(false);
+
+  const handleAddSubmit = async (data: Record<string, any>) => {
     try {
       const response = await fetchBackendPOST(`/service/add/${customerId}`, data);
       if (response.ok) {
         console.log('Service added successfully');
+        // Refresh data
       } else {
         console.error('Failed to add service');
       }
@@ -29,10 +40,47 @@ const Service = ({ customer }: { customer: Customer }) => {
     handleClose();
   };
 
+  const handleUpdateSubmit = async (data: Record<string, any>) => {
+    try {
+      const response = await fetchBackendPUT(`/service/${selectedService?._id}`, data);
+      if (response.ok) {
+        console.log('Service updated successfully');
+        // Refresh data
+      } else {
+        console.error('Failed to update service');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+    handleUpdateModalClose();
+  };
+
+  const handleDelete = async (serviceId: string) => {
+    try {
+      const response = await fetchBackendDELETE(`/service/${serviceId}`);
+      if (response.ok) {
+        console.log('Service deleted successfully');
+        // Refresh data
+      } else {
+        console.error('Failed to delete service');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   return (
     <Box>
       <Box>
-        <AddServiceModal open={modalOpen} onClose={handleClose} onSubmit={handleSubmit} />
+        <AddServiceModal open={modalOpen} onClose={handleClose} onSubmit={handleAddSubmit} />
+        {selectedService && (
+          <UpdateServiceModal
+            open={updateModalOpen}
+            service={selectedService}
+            onClose={handleUpdateModalClose}
+            onSubmit={handleUpdateSubmit}
+          />
+        )}
         <Button variant="contained" onClick={handleOpen}>
           Add Service
         </Button>
@@ -46,7 +94,8 @@ const Service = ({ customer }: { customer: Customer }) => {
               <TableCell>Total Fee</TableCell>
               <TableCell>Start Date</TableCell>
               <TableCell>Days Left</TableCell>
-              <TableCell>Status</TableCell> {/* Yeni sütun */}
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell> {/* Yeni sütun */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -96,6 +145,18 @@ const Service = ({ customer }: { customer: Customer }) => {
                       size="small"
                     />
                   </TableCell>
+                  <TableCell>
+                    <Tooltip title="Edit">
+                      <IconButton onClick={() => handleUpdateModalOpen(service)}>
+                      <Icon icon="mdi:pencil" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton onClick={() => handleDelete(service._id)}>
+                      <Icon icon="mdi:delete" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -106,4 +167,4 @@ const Service = ({ customer }: { customer: Customer }) => {
   );
 };
 
-export default Service;
+export default ServiceTab;

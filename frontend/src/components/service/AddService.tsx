@@ -29,7 +29,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
     doctorNotes: '',
     massageType: '',
     preferences: '',
-    membershipStartDate: new Date().toISOString().slice(0, 10), // Varsayılan olarak bugünün tarihi
+    membershipStartDate: new Date().toISOString().slice(0, 10), 
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -54,7 +54,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
       doctorNotes: '',
       massageType: '',
       preferences: '',
-      membershipStartDate: new Date().toISOString().slice(0, 10), // Sıfırlandığında bugünkü tarih atanır
+      membershipStartDate: new Date().toISOString().slice(0, 10), 
     });
     onClose();
   };
@@ -131,7 +131,6 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 600,
             padding: 4,
           }}
         >

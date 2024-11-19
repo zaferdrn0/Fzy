@@ -40,7 +40,7 @@ const MemberShipDetail = ({ customer }: { customer: Customer }) => {
             }}
           >
             <Typography variant="h6" gutterBottom>
-              Üyelik Detayları
+            Membership Details
             </Typography>
             {selectedService && (
               <Box>

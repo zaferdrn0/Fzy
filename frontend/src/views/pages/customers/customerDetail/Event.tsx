@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Customer } from '@/models/dataType';
+import { Customer, Event } from '@/models/dataType';
 import {
   TableContainer,
   Table,
@@ -9,24 +9,27 @@ import {
   TableBody,
   Chip,
   Button,
-  Modal,
-  Box,
-  TextField,
-  MenuItem,
+  IconButton,
+  Tooltip,
+
 } from '@mui/material';
 import { useRouter } from 'next/router';
-import { fetchBackendPOST } from '@/utils/backendFetch';
+import AddEvent from '@/components/event/AddEvent';
+import { fetchBackendDELETE, fetchBackendPOST, fetchBackendPUT } from '@/utils/backendFetch';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import UpdateEvent from '@/components/event/UpdateEvent';
 
 const EventTab = ({ customer }: { customer: Customer }) => {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    date: '',
-    status: '',
-    notes: '',
-    service: '',
-  });
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const router = useRouter();
   const customerId = router.query.customerId as string;
+
+  const handleUpdateModalOpen = (event: Event) => {
+    setSelectedEvent(event);
+    setUpdateOpen(true);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -47,101 +50,46 @@ const EventTab = ({ customer }: { customer: Customer }) => {
       serviceType: service.serviceType,
     }))
   );
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
+  const handleAddEventSubmit = async (data: Record<string, any>) => {
     try {
-      const response = await fetchBackendPOST(`/event/add/${customerId}`, {
-        date: formData.date,
-        status: formData.status,
-        notes: formData.notes,
-        service: formData.service,
-      });
+      const response = await fetchBackendPOST(`/event/add/${customerId}`, {data});
       if (!response.ok) throw new Error('Failed to add event');
-      setOpen(false);
+    
     } catch (error) {
       console.error('Error creating event:', error);
     }
+    setOpen(false)
   };
+
+  const handleUpdateEventSubmit = async ( data: Record<string, any>) => {
+    try {
+      const response = await fetchBackendPUT(`/event/${selectedEvent?._id}`, data);
+      if (!response.ok) throw new Error('Failed to update event');
+
+    } catch (error) {
+      console.error('Error updating event:', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+          const response = await fetchBackendDELETE(`/event/${id}`);
+          if (!response.ok) throw new Error('Failed to delete event');
+
+        } catch (error) {
+          console.error('Error deleting event:', error);
+        }
+  }
+
 
   return (
     <>
       <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
         Add Event
       </Button>
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 600,
-            bgcolor: 'background.paper',
-          
-            boxShadow: 24,
-            p: 4,
-          }}
-        >
-          <h2>Create Event</h2>
-          <form onSubmit={handleSubmit}>
-            <TextField
-              name="date"
-              type="datetime-local"
-              label="Date"
-              fullWidth
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-              value={formData.date}
-              onChange={handleInputChange}
-            />
-            <TextField
-              name="status"
-              select
-              label="Status"
-              fullWidth
-              margin="normal"
-              value={formData.status}
-              onChange={handleInputChange}
-            >
-              <MenuItem value="attended">Attended</MenuItem>
-              <MenuItem value="missed">Missed</MenuItem>
-              <MenuItem value="scheduled">Scheduled</MenuItem>
-            </TextField>
-            <TextField
-              name="notes"
-              label="Notes"
-              fullWidth
-              margin="normal"
-              value={formData.notes}
-              onChange={handleInputChange}
-            />
-            <TextField
-              name="service"
-              select
-              label="Service"
-              fullWidth
-              margin="normal"
-              value={formData.service}
-              onChange={handleInputChange}
-            >
-              {customer.services.map((service) => (
-                <MenuItem key={service.serviceType} value={service.serviceType}>
-                  {service.serviceType}
-                </MenuItem>
-              ))}
-            </TextField>
-            <Button type="submit" variant="contained" color="primary">
-              Submit
-            </Button>
-          </form>
-        </Box>
-      </Modal>
+      <AddEvent customer={customer} onClose={()=>setOpen(false)} onSubmit={handleAddEventSubmit} open={open}/>
+      {selectedEvent && (
+      <UpdateEvent onClose={()=>setUpdateOpen(false)} onSubmit={handleUpdateEventSubmit} open={updateOpen} event={selectedEvent}/>)}
       <TableContainer>
         <Table>
           <TableHead>
@@ -150,6 +98,7 @@ const EventTab = ({ customer }: { customer: Customer }) => {
               <TableCell>Service</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Notes</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -161,6 +110,18 @@ const EventTab = ({ customer }: { customer: Customer }) => {
                   <Chip label={event.status} color={getStatusColor(event.status)} size="small" />
                 </TableCell>
                 <TableCell>{event.notes || '-'}</TableCell>
+                <TableCell>
+                    <Tooltip title="Edit">
+                      <IconButton onClick={() => handleUpdateModalOpen(event)}>
+                      <Icon icon="mdi:pencil" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton onClick={() => handleDelete(event._id)}>
+                      <Icon icon="mdi:delete" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
               </TableRow>
             ))}
           </TableBody>
