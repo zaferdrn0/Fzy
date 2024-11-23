@@ -29,7 +29,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
     doctorNotes: '',
     massageType: '',
     preferences: '',
-    membershipStartDate: new Date().toISOString().slice(0, 10), 
+    membershipStartDate: new Date().toISOString().slice(0, 10),
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -54,7 +54,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
       doctorNotes: '',
       massageType: '',
       preferences: '',
-      membershipStartDate: new Date().toISOString().slice(0, 10), 
+      membershipStartDate: new Date().toISOString().slice(0, 10),
     });
     onClose();
   };
@@ -71,6 +71,8 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
                 value={formData.medicalHistory}
                 onChange={handleChange}
                 fullWidth
+                multiline
+                rows={3}
               />
             </Grid>
             <Grid item xs={12}>
@@ -89,6 +91,8 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
                 value={formData.doctorNotes}
                 onChange={handleChange}
                 fullWidth
+                multiline
+                rows={3}
               />
             </Grid>
           </>
@@ -112,6 +116,8 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
                 value={formData.preferences}
                 onChange={handleChange}
                 fullWidth
+                multiline
+                rows={3}
               />
             </Grid>
           </>
@@ -131,7 +137,10 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            padding: 4,
+            padding: { xs: 2, sm: 4 },
+            width: { xs: '90%', sm: '60%', md: '50%' },
+            maxHeight: '90vh',
+            overflowY: 'auto',
           }}
         >
           <Typography variant="h5" component="h2" gutterBottom>
@@ -204,6 +213,8 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ open, onClose, onSubm
                   value={formData.trainerNotes}
                   onChange={handleChange}
                   fullWidth
+                  multiline
+                  rows={3}
                 />
               </Grid>
               {renderAdditionalFields()}

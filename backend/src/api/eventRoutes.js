@@ -7,7 +7,7 @@ const router = express.Router();
 router.post('/add/:customerId',authenticate, async (req, res) => {
   try {
     const { customerId } = req.params;
-    const { date, status, notes, service } = req.body.data;
+    const { date, status, notes, service } = req.body
 
     if (!date || !status || !service) {
       return res.status(400).json({ message: 'Date, status, and service are required.' });
@@ -49,19 +49,21 @@ router.put('/:eventId', authenticate, async (req, res) => {
     const { eventId } = req.params;
     const { date, status, notes } = req.body;
 
-    if (!date || !status) {
-      return res.status(400).json({ message: 'Date and status are required.' });
-    }
-
-    const updatedEvent = await Event.findByIdAndUpdate(
-      eventId,
-      { date: new Date(date), status, notes },
-      { new: true } // Güncellenmiş belgeyi döndürmek için
-    );
-
-    if (!updatedEvent) {
+    const event = await Event.findById(eventId);
+    if (!event) {
       return res.status(404).json({ message: 'Event not found.' });
     }
+
+    const updatedData = {
+      date: date ? new Date(date) : event.date, 
+      status: status || event.status,
+      notes: notes !== undefined ? notes : event.notes, 
+    };
+
+    // Etkinliği güncelle
+    const updatedEvent = await Event.findByIdAndUpdate(eventId, updatedData, {
+      new: true, // Güncellenmiş dokümanı döndür
+    });
 
     res.status(200).json({ message: 'Event updated successfully.', event: updatedEvent });
   } catch (error) {
@@ -69,6 +71,7 @@ router.put('/:eventId', authenticate, async (req, res) => {
     res.status(500).json({ message: 'Internal server error.' });
   }
 });
+
 
 
 router.delete('/:eventId', authenticate, async (req, res) => {

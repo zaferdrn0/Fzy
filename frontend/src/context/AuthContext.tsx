@@ -34,58 +34,58 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState<User | null | "loading">("loading");
 
-  const isAuthPage = (pathname: string) => {
-    const authPages = ['/login', '/register'];
-    return authPages.includes(pathname);
-  };
+  // const isAuthPage = (pathname: string) => {
+  //   const authPages = ['/login', '/register'];
+  //   return authPages.includes(pathname);
+  // };
 
-  const GetCurrentUser = async () => {
-    try {
-      const response = await fetchBackendGET('/user/me');
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentUser(data);
-      } else {
-        setCurrentUser(null);
-      }
-    } catch (error) {
-      console.error("Failed to fetch current user data:", error);
-      setCurrentUser(null);
-    }
-  };
+  // const GetCurrentUser = async () => {
+  //   try {
+  //     const response = await fetchBackendGET('/user/me');
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setCurrentUser(data);
+  //     } else {
+  //       setCurrentUser(null);
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to fetch current user data:", error);
+  //     setCurrentUser(null);
+  //   }
+  // };
 
-  const checkAuth = async () => {
-    try {
-      const response = await fetchBackendGET('/user/check-auth');
-      const data = await response.json();
-      if (data.isLoggedIn) {
-        await GetCurrentUser();
-        if (isAuthPage(router.pathname)) {
-          router.push('/home');
-        }
-      } else {
-        router.push("/login");
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      setCurrentUser(null);
-      router.push("/login");
-    }
-  };
+  // const checkAuth = async () => {
+  //   try {
+  //     const response = await fetchBackendGET('/user/check-auth');
+  //     const data = await response.json();
+  //     if (data.isLoggedIn) {
+  //       await GetCurrentUser();
+  //       if (isAuthPage(router.pathname)) {
+  //         router.push('/home');
+  //       }
+  //     } else {
+  //       router.push("/login");
+  //     }
+  //   } catch (error) {
+  //     console.error('Auth check failed:', error);
+  //     setCurrentUser(null);
+  //     router.push("/login");
+  //   }
+  // };
 
-  useEffect(() => {
-    if (isAuthPage(router.pathname)) {
-      setCurrentUser(null);
-    } else {
-      checkAuth();
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (isAuthPage(router.pathname)) {
+  //     setCurrentUser(null);
+  //   } else {
+  //     checkAuth();
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    if (router.pathname === "/login") {
-      setCurrentUser(null);
-    }
-  }, [router.pathname]);
+  // useEffect(() => {
+  //   if (router.pathname === "/login") {
+  //     setCurrentUser(null);
+  //   }
+  // }, [router.pathname]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await fetchBackendPOST('/user/login', loginData);
       const data = await response.json();
       if (response.ok && data.session) {
-        await GetCurrentUser();
+    ;
         router.push("/home");
       } else {
         console.error("Login failed:", data.message);
@@ -119,9 +119,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value = { currentUser, login, logout };
 
-  if (currentUser === "loading") {
+/*   if (currentUser === "loading") {
     return <LoadingScreen />;
-  }
+  } */
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

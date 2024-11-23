@@ -5,13 +5,13 @@ import { NextPage } from 'next';
 import CustomerDetail from '@/views/pages/customers/CustomerDetail';
 import { fetchBackendGET } from '@/utils/backendFetch';
 import { useEffect, useState } from 'react';
-import { Customer } from '@/models/dataType';
+import { Customer, customerData } from '@/models/dataType';
 
 const CustomerDetailPage: NextPage = () => {
 
   const router = useRouter();
   const { customerId } = router.query;
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(customerData[0]);
 
   const getCustomerDetail = async  () =>{
     const customer = await fetchBackendGET(`/customer/${customerId}`)

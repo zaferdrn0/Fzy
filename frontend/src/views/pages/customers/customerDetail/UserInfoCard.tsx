@@ -1,3 +1,5 @@
+// components/customerDetail/UserInfoCard.tsx
+
 import React, { useState } from 'react';
 import {
   Grid,
@@ -18,12 +20,16 @@ import { Customer } from '@/models/dataType';
 import { calculateAge } from '@/utils/calculateAge';
 import { fetchBackendPUT } from '@/utils/backendFetch';
 
-const UserInfoCard = ({ customer }: { customer: Customer }) => {
+interface UserInfoCardProps {
+  customer: Customer;
+}
+
+const UserInfoCard: React.FC<UserInfoCardProps> = ({ customer }) => {
   const [openModal, setOpenModal] = useState(false);
   const [isActive, setIsActive] = useState(customer.isActive);
   const [formData, setFormData] = useState({
-    firstName: customer.name.first,
-    lastName: customer.name.last,
+    name: customer.name,
+    surname: customer.surname,
     email: customer.email,
     phone: customer.phone,
     weight: customer.weight,
@@ -34,35 +40,43 @@ const UserInfoCard = ({ customer }: { customer: Customer }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'weight' ? Number(value) : value,
+    }));
   };
 
   const handleSubmit = async () => {
     try {
       const response = await fetchBackendPUT(`/customer/${customer._id}`, formData);
       if (response.ok) {
-        alert('User updated successfully');
+        alert('Kullanıcı başarıyla güncellendi');
         handleCloseModal();
+        // Optionally, you can trigger a re-fetch or update parent state here
       } else {
-        console.error('Failed to update user');
+        console.error('Kullanıcı güncellenemedi');
+        alert('Kullanıcı güncellenirken bir hata oluştu');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Hata:', error);
+      alert('Bir hata oluştu');
     }
   };
 
   const toggleActiveStatus = async () => {
     try {
-      const response = await fetchBackendPUT(`/customer/${customer._id}`,{isActive: !isActive});
+      const response = await fetchBackendPUT(`/customer/${customer._id}`, { isActive: !isActive });
 
       if (response.ok) {
         setIsActive((prev) => !prev);
-        alert(`User ${!isActive ? 'activated' : 'suspended'} successfully`);
+        alert(`Kullanıcı başarıyla ${!isActive ? 'aktif edildi' : 'askıya alındı'}`);
       } else {
-        console.error('Failed to update user status');
+        console.error('Kullanıcı durumu güncellenemedi');
+        alert('Kullanıcı durumu güncellenirken bir hata oluştu');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Hata:', error);
+      alert('Bir hata oluştu');
     }
   };
 
@@ -72,7 +86,7 @@ const UserInfoCard = ({ customer }: { customer: Customer }) => {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
           <Avatar sx={{ width: 120, height: 120, mb: 2 }} src="/default-avatar.png" />
           <Typography variant="h5">
-            {`${customer.name.first.toUpperCase()} ${customer.name.last.toUpperCase()}`}
+            {`${customer.name.toUpperCase()} ${customer.surname.toUpperCase()}`}
           </Typography>
           <Typography
             variant="body2"
@@ -84,31 +98,31 @@ const UserInfoCard = ({ customer }: { customer: Customer }) => {
               mt: 1,
             }}
           >
-            {isActive ? 'Active' : 'Suspended'}
+            {isActive ? 'Aktif' : 'Askıya Alındı'}
           </Typography>
         </Box>
 
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Details
+          Detaylar
         </Typography>
         <List dense>
           <ListItem>
-            <ListItemText primary="Email" secondary={customer.email} />
+            <ListItemText primary="E-posta" secondary={customer.email} />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Phone" secondary={customer.phone} />
+            <ListItemText primary="Telefon" secondary={customer.phone} />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Age" secondary={calculateAge(customer.birthDate)} />
+            <ListItemText primary="Yaş" secondary={calculateAge(customer.birthDate)} />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Weight" secondary={`${customer.weight} kg`} />
+            <ListItemText primary="Ağırlık" secondary={`${customer.weight} kg`} />
           </ListItem>
         </List>
 
         <Box sx={{ mt: 2 }}>
           <Button variant="contained" fullWidth sx={{ mb: 1 }} onClick={handleOpenModal}>
-            Edit
+            Düzenle
           </Button>
           <Button
             variant="outlined"
@@ -116,12 +130,12 @@ const UserInfoCard = ({ customer }: { customer: Customer }) => {
             fullWidth
             onClick={toggleActiveStatus}
           >
-            {isActive ? 'Suspend' : 'Activate'}
+            {isActive ? 'Askıya Al' : 'Aktif Et'}
           </Button>
         </Box>
       </Card>
 
-      {/* Edit Modal */}
+      {/* Düzenleme Modalı */}
       <Modal open={openModal} onClose={handleCloseModal} closeAfterTransition>
         <Fade in={openModal}>
           <Paper
@@ -130,53 +144,61 @@ const UserInfoCard = ({ customer }: { customer: Customer }) => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: 500,
+              width: { xs: '90%', sm: 500 },
               p: 4,
             }}
           >
             <Typography variant="h6" gutterBottom>
-              Edit User
+              Kullanıcıyı Düzenle
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
-                label="First Name"
-                name="firstName"
-                value={formData.firstName}
+                label="İsim"
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
+                fullWidth
               />
               <TextField
-                label="Last Name"
-                name="lastName"
-                value={formData.lastName}
+                label="Soyisim"
+                name="surname"
+                value={formData.surname}
                 onChange={handleChange}
+                fullWidth
               />
               <TextField
-                label="Email"
+                label="E-posta"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                fullWidth
+                type="email"
               />
               <TextField
-                label="Phone"
+                label="Telefon"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                fullWidth
+                type="tel"
               />
               <TextField
-                label="Weight"
+                label="Ağırlık (kg)"
                 name="weight"
                 type="number"
                 value={formData.weight}
                 onChange={handleChange}
+                fullWidth
+                inputProps={{ min: 0 }}
               />
               <Button variant="contained" onClick={handleSubmit}>
-                Save
+                Kaydet
               </Button>
             </Box>
           </Paper>
         </Fade>
       </Modal>
-      </>
+    </>
   );
 };
 

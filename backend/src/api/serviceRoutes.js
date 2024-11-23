@@ -25,8 +25,14 @@ router.post('/add/:customerId', authenticate, async (req, res) => {
       membershipDuration: membershipDuration || null,
       totalFee: totalFee || null,
       trainerNotes: trainerNotes || null,
-      membershipStartDate: membershipStartDate || new Date(), 
+      membershipStartDate: membershipStartDate || new Date(),
+      medicalHistory: req.body.medicalHistory || null,
+      injuryType: req.body.injuryType || null,
+      doctorNotes: req.body.doctorNotes || null,
+      massageType: req.body.massageType || null,
+      preferences: req.body.preferences || null,
     });
+    
 
     await newService.save();
 
@@ -42,13 +48,29 @@ router.post('/add/:customerId', authenticate, async (req, res) => {
 router.put('/:serviceId', authenticate, async (req, res) => {
   try {
     const { serviceId } = req.params;
-    const {
-      membershipType,
-      membershipDuration,
-      membershipStartDate,
-      totalFee,
-      trainerNotes,
-    } = req.body;
+
+    // Güncellenebilir alanlar
+    const updateFields = [
+      'membershipType',
+      'membershipDuration',
+      'membershipStartDate',
+      'totalFee',
+      'trainerNotes',
+      'medicalHistory',
+      'injuryType',
+      'doctorNotes',
+      'massageType',
+      'preferences',
+    ];
+
+    const updates = {};
+    updateFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+       
+        updates[field] =
+          field === 'membershipStartDate' ? new Date(req.body[field]) : req.body[field];
+      }
+    });
 
     const service = await Service.findById(serviceId);
 
@@ -56,12 +78,7 @@ router.put('/:serviceId', authenticate, async (req, res) => {
       return res.status(404).json({ message: 'Service not found.' });
     }
 
-    if (membershipType) service.membershipType = membershipType;
-    if (membershipDuration) service.membershipDuration = membershipDuration;
-    if (membershipStartDate) service.membershipStartDate = new Date(membershipStartDate);
-    if (totalFee) service.totalFee = totalFee;
-    if (trainerNotes) service.trainerNotes = trainerNotes;
-
+    Object.assign(service, updates);
     service.updatedAt = new Date(); 
 
     await service.save();
@@ -72,6 +89,7 @@ router.put('/:serviceId', authenticate, async (req, res) => {
     res.status(500).json({ message: 'Internal server error.' });
   }
 });
+
 router.delete('/:serviceId', authenticate, async (req, res) => {
   try {
     const { serviceId } = req.params;
