@@ -20,10 +20,6 @@ const subscriptionSchema = new Schema({
     type: Date,
     required: true
   },
-  endDate: {
-    type: Date,
-    required: true
-  },
   sessionLimit: {
     type: Number,
     required: true
@@ -36,10 +32,6 @@ const subscriptionSchema = new Schema({
     type: Number,
     required: true
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -49,8 +41,6 @@ const subscriptionSchema = new Schema({
     default: Date.now
   }
 });
-
-subscriptionSchema.index({ customerId: 1, serviceId: 1, isActive: 1 }, { unique: true, partialFilterExpression: { isActive: true } });
 
 const Subscription = mongoose.model('Subscription', subscriptionSchema);
 export default Subscription;

@@ -10,11 +10,7 @@ export interface MenuItem {
   
 
  export const menuItems: MenuItem[] = [
-    {
-      title: 'Home',
-      pathname: '/home',
-      icon: 'material-symbols:dashboard-outline',
-    },
+
     {
       secondaryTitle: 'Management',
       title: 'Customers',

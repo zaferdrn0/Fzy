@@ -23,7 +23,7 @@ const appointmentSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['İleri Tarihli', 'Geldi', 'Gelmeyi Unuttu'],
+    enum: ['İleri Tarihli', 'Geldi', 'Gelmedi'],
     default: 'İleri Tarihli'
   },
   notes: {

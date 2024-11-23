@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import AddCustomerModal from '@/components/customers/AddCustomer';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { fetchBackendPOST } from '@/utils/backendFetch';
-import { getCustomers } from '@/utils/customers/getCustomers';
 import { Customer } from '@/models/dataType';
 
 const CustomerDashboard = ({
@@ -23,11 +22,21 @@ const CustomerDashboard = ({
   const handleSubmit = async (data: Record<string, any>) => {
     const addCustomer = await fetchBackendPOST('/customer/add', data);
     if (addCustomer.ok) {
+      const newCustomer = await addCustomer.json(); // Yeni müşteri verisini al
+      setCustomers((prevCustomers) => {
+        if (Array.isArray(prevCustomers)) {
+          // prevCustomers bir dizi ise yeni müşteri ekle
+          return [...prevCustomers, newCustomer.customer];
+        }
+        return prevCustomers; // Eğer değilse mevcut durumu koru
+      });
       console.log('Customer added successfully');
       handleClose();
-      await getCustomers(setCustomers);
+    } else {
+      console.error('Failed to add customer');
     }
   };
+  
 
   return (
     <Box sx={{ p: 3 }}>
@@ -53,7 +62,6 @@ const CustomerDashboard = ({
               <TableCell>Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Phone</TableCell>
-              <TableCell>Services</TableCell>
               <TableCell>Active Status</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -69,10 +77,7 @@ const CustomerDashboard = ({
                 <TableCell>{customer.email}</TableCell>
                 {/* Phone */}
                 <TableCell>{customer.phone}</TableCell>
-                {/* Services */}
-                <TableCell>
-                  {customer.services.map((service) => service.type).join(', ')}
-                </TableCell>
+
                 {/* Total Spent */}
                
                 {/* Active Status */}
