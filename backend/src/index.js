@@ -4,8 +4,6 @@ import { connectDB } from './config/mongoose.js';
 import { sessionMiddleware } from './config/session.js';
 import userRoutes from './api/userRoutes.js';
 import customerRoutes from './api/customerRoutes.js';
-import Appointment from './models/appointment.js';
-import Subscription from './models/subscription.js';
 import { Role } from './models/role.js';
 import Service from './models/service.js';
 import serviceRoutes from './api/serviceRoutes.js';

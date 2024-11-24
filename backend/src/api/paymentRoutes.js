@@ -4,6 +4,42 @@ import { Customer,Appointment,Payment,Service,Subscription } from '../models/ind
 
 const router = express.Router();
 
+router.get('/:customerId', authenticate, async (req, res) => {
+    const { customerId } = req.params;
+
+    try {
+        const payments = await Payment.find({ customerId })
+            .populate('serviceId', 'type description') // Service bilgilerini doldur
+            .populate('subscriptionId', 'durationDays startDate') // Abonelik bilgilerini doldur
+            .populate('appointmentId', 'date status'); // Randevu bilgilerini doldur
+
+        if (!payments || payments.length === 0) {
+            return res.status(404).json({ message: 'No payments found for this customer.' });
+        }
+
+        // Formatlı yanıt oluştur
+        const formattedPayments = payments.map((payment) => ({
+            _id: payment._id,
+            customerId: payment.customerId,
+            serviceId: payment.serviceId._id,
+            serviceType: payment.serviceId.type,
+            serviceDescription: payment.serviceId.description,
+            subscriptionId: payment.subscriptionId?._id || null,
+            appointmentId: payment.appointmentId?._id || null,
+            appointmentDate: payment.appointmentId?.date || null,
+            appointmentStatus: payment.appointmentId?.status || null,
+            amount: payment.amount,
+            status: payment.status,
+            date: payment.date,
+            createdAt: payment.createdAt,
+        }));
+
+        res.status(200).json(formattedPayments);
+    } catch (error) {
+        console.error('Error fetching payments:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
 router.post('/add', async (req, res) => {
     const { customerId, serviceId, subscriptionId, appointmentId, amount, date } = req.body;
 

@@ -14,4 +14,23 @@ router.get('/list', authenticate, async (req, res) => {
     }
   });
 
+  router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      const serviceIds = [
+        ...(await Payment.find({ customerId: id }).distinct('serviceId')),
+        ...(await Appointment.find({ customerId: id }).distinct('serviceId')),
+        ...(await Subscription.find({ customerId: id }).distinct('serviceId')),
+      ];
+  
+      const services = await Service.find({ _id: { $in: serviceIds } }).lean();
+  
+      res.status(200).json(services);
+    } catch (error) {
+      console.error('Error fetching customer services:', error);
+      res.status(500).json({ message: 'Error fetching customer services.' });
+    }
+  });
+
 export default router;
