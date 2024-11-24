@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (data.isLoggedIn) {
         await GetCurrentUser();
         if (isAuthPage(router.pathname)) {
-          router.push('/home');
+          router.push('/customers');
         }
       } else {
         router.push("/login");
@@ -94,9 +94,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       if (response.ok && data.session) {
     ;
-        router.push("/home");
+        router.push("/customers");
       } else {
         console.error("Login failed:", data.message);
+        alert(data.message);
       }
     } catch (error) {
       console.error("Login process error:", error);

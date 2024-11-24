@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
+import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
 import { Icon } from '@iconify/react';
 import { useRouter } from 'next/router';
 import AddCustomerModal from '@/components/customers/AddCustomer';

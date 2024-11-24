@@ -27,10 +27,6 @@ export interface Customer {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  services: Service[]; // İlişkilendirilmiş hizmetler
-  subscriptions: Subscription[]; // İlişkilendirilmiş abonelikler
-  appointments: Appointment[]; // İlişkilendirilmiş randevular
-  payments: Payment[]; // İlişkilendirilmiş ödemeler
 }
 
 // Payment Interface
@@ -58,6 +54,7 @@ export interface Service {
 export interface Subscription {
   _id: string;
   customerId?: string;
+  serviceType: string;
   serviceId: string;
   durationDays: number;
   startDate: string;
@@ -71,7 +68,8 @@ export interface Subscription {
 export interface Appointment {
   _id: string; // MongoDB ID'si
   customerId: string; // Müşteri ID'si
-  serviceId: string; // Hizmet ID'si
+  serviceType: string; // Hizmet ID'si
+  serviceId:string;
   subscriptionId?: string | null; // Abonelik ID'si (opsiyonel)
   date: string; // Randevu tarihi (ISO formatında)
   status: 'İleri Tarihli' | 'Geldi' | 'Gelmedi'; // Randevu durumu

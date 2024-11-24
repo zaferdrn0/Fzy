@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import {
   Modal,
-  Paper,
   Box,
   Typography,
   TextField,
   Button,
-  Grid,
 } from '@mui/material';
 import { Service } from '@/models/dataType';
 
@@ -19,6 +17,7 @@ interface AddSubscriptionModalProps {
     durationDays: number;
     startDate: string;
     sessionLimit: number;
+    makeupSessions: number; // Telafi ders sayısı
     fee: number;
   }) => void;
   services: Service[] | null; // Available services to select
@@ -31,6 +30,7 @@ const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({ open, onClo
     durationDays: 30,
     startDate: '',
     sessionLimit: 10,
+    makeupSessions: 0, // Telafi ders sayısı
     fee: 100,
   });
 
@@ -40,21 +40,25 @@ const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({ open, onClo
   };
 
   const handleSubmit = () => {
-    const { serviceId, durationDays, startDate, sessionLimit, fee } = formData;
+    const { serviceId, durationDays, startDate, sessionLimit, makeupSessions, fee } = formData;
+
+    // Form verilerini onSubmit'e gönder
     onSubmit({
       customerId,
       serviceId,
       durationDays: Number(durationDays),
       startDate,
       sessionLimit: Number(sessionLimit),
+      makeupSessions: Number(makeupSessions), // Telafi ders sayısını gönder
       fee: Number(fee),
     });
+
     onClose();
   };
 
   return (
     <Modal open={open} onClose={onClose}>
- <Box sx={{ p: 4, bgcolor: 'background.paper', borderRadius: 2, width: 400, mx: 'auto', mt: 10 }}>
+      <Box sx={{ p: 4, bgcolor: 'background.paper', borderRadius: 2, width: 400, mx: 'auto', mt: 10 }}>
         <Typography variant="h6" gutterBottom>
           Add Subscription
         </Typography>
@@ -101,6 +105,15 @@ const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({ open, onClo
             name="sessionLimit"
             type="number"
             value={formData.sessionLimit}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Makeup Sessions" // Telafi ders sayısı
+            name="makeupSessions"
+            type="number"
+            value={formData.makeupSessions}
             onChange={handleChange}
             fullWidth
             sx={{ mb: 2 }}

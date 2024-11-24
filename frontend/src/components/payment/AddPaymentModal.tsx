@@ -9,8 +9,10 @@ import {
     Select,
     FormControl,
     InputLabel,
+    CircularProgress,
 } from '@mui/material';
 import { Service, Subscription, Appointment } from '@/models/dataType';
+import { fetchBackendGET } from '@/utils/backendFetch';
 
 interface AddPaymentModalProps {
     open: boolean;
@@ -24,9 +26,6 @@ interface AddPaymentModalProps {
         date: string;
     }) => void;
     customerId: string;
-    services: Service[];
-    subscriptions: Subscription[];
-    appointments: Appointment[];
 }
 
 const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
@@ -34,10 +33,10 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
     onClose,
     onSubmit,
     customerId,
-    services,
-    subscriptions,
-    appointments,
 }) => {
+    const [services, setServices] = useState<Service[]>([]);
+    const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [selectedService, setSelectedService] = useState<string>('');
     const [formData, setFormData] = useState({
         serviceId: '',
@@ -46,21 +45,49 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         amount: 0,
         date: '',
     });
-
     const [filteredSubscriptions, setFilteredSubscriptions] = useState<Subscription[]>([]);
     const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [servicesResponse, subscriptionsResponse, appointmentsResponse] = await Promise.all([
+                    fetchBackendGET(`/service/${customerId}`),
+                    fetchBackendGET(`/subscription/${customerId}`),
+                    fetchBackendGET(`/appointment/${customerId}`),
+                ]);
+
+                if (servicesResponse.ok) {
+                    setServices(await servicesResponse.json());
+                }
+                if (subscriptionsResponse.ok) {
+                    setSubscriptions(await subscriptionsResponse.json());
+                }
+                if (appointmentsResponse.ok) {
+                    setAppointments(await appointmentsResponse.json());
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (open) {
+            fetchData();
+        }
+    }, [open, customerId]);
 
     useEffect(() => {
         if (selectedService) {
-            // Hizmete bağlı abonelikleri filtrele
             const subs = subscriptions.filter((sub) => sub.serviceId === selectedService);
             setFilteredSubscriptions(subs);
 
-            // Hizmete bağlı randevuları filtrele
             const appts = appointments.filter((appt) => appt.serviceId === selectedService);
             setFilteredAppointments(appts);
 
-            // Formda hizmet ID'sini güncelle
             setFormData((prev) => ({ ...prev, serviceId: selectedService, subscriptionId: '', appointmentId: '' }));
         } else {
             setFilteredSubscriptions([]);
@@ -68,8 +95,8 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         }
     }, [selectedService, subscriptions, appointments]);
 
-    const handleChange = (e: { target: { name: any; value: any; }; }) => {
-        const { name, value } = e.target
+    const handleChange = (e: { target: { name: any; value: any } }) => {
+        const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
@@ -89,6 +116,17 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         });
         onClose();
     };
+
+    if (loading) {
+        return (
+            <Modal open={open} onClose={onClose}>
+                <Box sx={{ p: 4, bgcolor: 'background.paper', borderRadius: 2, width: 400, mx: 'auto', mt: 10 }}>
+                    <Typography variant="h6" gutterBottom>Veriler Yükleniyor...</Typography>
+                    <CircularProgress />
+                </Box>
+            </Modal>
+        );
+    }
 
     return (
         <Modal open={open} onClose={onClose}>

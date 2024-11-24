@@ -9,7 +9,9 @@ import {
     Select,
     FormControl,
     InputLabel,
+    CircularProgress,
 } from '@mui/material';
+import { fetchBackendGET } from '@/utils/backendFetch';
 import { Payment, Service, Subscription, Appointment } from '@/models/dataType';
 
 interface UpdatePaymentModalProps {
@@ -25,9 +27,7 @@ interface UpdatePaymentModalProps {
         appointmentId?: string;
     }) => void;
     payment: Payment | null;
-    services: Service[] | null;
-    subscriptions: Subscription[] | null;
-    appointments: Appointment[] | null;
+    customerId: string;
 }
 
 const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
@@ -35,10 +35,11 @@ const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
     onClose,
     onSubmit,
     payment,
-    services,
-    subscriptions,
-    appointments,
+    customerId,
 }) => {
+    const [services, setServices] = useState<Service[] | null>(null);
+    const [subscriptions, setSubscriptions] = useState<Subscription[] | null>(null);
+    const [appointments, setAppointments] = useState<Appointment[] | null>(null);
     const [formData, setFormData] = useState({
         amount: payment?.amount || 0,
         date: payment?.date || '',
@@ -47,6 +48,38 @@ const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
         subscriptionId: payment?.subscriptionId || '',
         appointmentId: payment?.appointmentId || '',
     });
+    const [loading, setLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [servicesResponse, subscriptionsResponse, appointmentsResponse] = await Promise.all([
+                    fetchBackendGET(`/service/${customerId}`),
+                    fetchBackendGET(`/subscription/${customerId}`),
+                    fetchBackendGET(`/appointment/${customerId}`),
+                ]);
+
+                if (servicesResponse.ok) {
+                    setServices(await servicesResponse.json());
+                }
+                if (subscriptionsResponse.ok) {
+                    setSubscriptions(await subscriptionsResponse.json());
+                }
+                if (appointmentsResponse.ok) {
+                    setAppointments(await appointmentsResponse.json());
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (open) {
+            fetchData();
+        }
+    }, [open, customerId]);
 
     useEffect(() => {
         if (payment) {
@@ -61,7 +94,7 @@ const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
         }
     }, [payment]);
 
-    const handleChange = (e: { target: { name: any; value: any; }; }) => {
+    const handleChange = (e: { target: { name: string; value: any } }) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -72,6 +105,17 @@ const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
             onClose();
         }
     };
+
+    if (loading) {
+        return (
+            <Modal open={open} onClose={onClose}>
+                <Box sx={{ p: 4, bgcolor: 'background.paper', borderRadius: 2, width: 400, mx: 'auto', mt: 10 }}>
+                    <Typography variant="h6" gutterBottom>Veriler Yükleniyor...</Typography>
+                    <CircularProgress />
+                </Box>
+            </Modal>
+        );
+    }
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -110,23 +154,23 @@ const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
                     </Select>
                 </FormControl>
                 {formData.serviceId && (subscriptions ?? []).length > 0 && (
-    <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel>Abonelik</InputLabel>
-        <Select
-            name="subscriptionId"
-            value={formData.subscriptionId}
-            onChange={handleChange}
-        >
-            {(subscriptions ?? [])
-                .filter((sub) => sub.serviceId === formData.serviceId)
-                .map((sub) => (
-                    <MenuItem key={sub._id} value={sub._id}>
-                        {sub._id}
-                    </MenuItem>
-                ))}
-        </Select>
-    </FormControl>
-)}
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel>Abonelik</InputLabel>
+                        <Select
+                            name="subscriptionId"
+                            value={formData.subscriptionId}
+                            onChange={handleChange}
+                        >
+                            {(subscriptions ?? [])
+                                .filter((sub) => sub.serviceId === formData.serviceId)
+                                .map((sub) => (
+                                    <MenuItem key={sub._id} value={sub._id}>
+                                        {sub._id}
+                                    </MenuItem>
+                                ))}
+                        </Select>
+                    </FormControl>
+                )}
                 {formData.serviceId && (appointments ?? []).length > 0 && (
                     <FormControl fullWidth sx={{ mb: 2 }}>
                         <InputLabel>Randevu</InputLabel>
