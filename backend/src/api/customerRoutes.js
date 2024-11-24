@@ -1,16 +1,13 @@
 import express from 'express';
 import { authenticate } from '../middleware/authentication.js';
-import { Customer, Service,Event,Payment } from '../models/index.js';
+import { Customer,Appointment,Payment,Service,Subscription } from '../models/index.js';
 
 const router = express.Router();
 
-router.get('/list',authenticate, async (req, res) => {
+// Tüm müşterileri listeleme
+router.get('/list', authenticate, async (req, res) => {
   try {
     const customers = await Customer.find({})
-      .populate({
-        path: 'services',
-        select: 'serviceType membershipType membershipDuration membershipStartDate',
-      });
 
     res.status(200).json(customers);
   } catch (error) {
@@ -19,35 +16,11 @@ router.get('/list',authenticate, async (req, res) => {
   }
 });
 
-router.get('/:id', authenticate, async (req, res) => {
+router.post('/add', authenticate, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { name, surname, email, phone, birthDate, weight, address } = req.body;
 
-    const customer = await Customer.findById(id)
-      .populate({
-        path: 'services',
-        populate: [
-          { path: 'events' },
-          { path: 'payments' },
-        ],
-      })
-
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found.' });
-    }
-
-    res.status(200).json(customer);
-  } catch (error) {
-    console.error('Error fetching customer details:', error);
-    res.status(500).json({ message: 'Error fetching customer details.' });
-  }
-});
-
-router.post('/add',authenticate, async (req, res) => {
-  try {
-    const { firstName, lastName, email, phone, birthDate, weight } = req.body;
-
-    if (!firstName || !lastName || !email || !phone || !birthDate || !weight) {
+    if (!name || !surname || !email || !phone || !birthDate || !weight) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
@@ -57,16 +30,14 @@ router.post('/add',authenticate, async (req, res) => {
     }
 
     const newCustomer = new Customer({
-      name: {
-        first: firstName,
-        last: lastName,
-      },
+      name,
+      surname,
       email,
       phone,
-      birthDate: new Date(birthDate), 
+      birthDate: new Date(birthDate),
       weight: parseFloat(weight),
+      address,
     });
-
 
     await newCustomer.save();
 
@@ -77,22 +48,41 @@ router.post('/add',authenticate, async (req, res) => {
   }
 });
 
-router.put('/:customerId', async (req, res) => {
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const { customerId } = req.params;
-    const updatedData = req.body;
-
-    const updatedCustomer = await Customer.findByIdAndUpdate(customerId, updatedData, {
-      new: true, 
-    });
-
-    if (!updatedCustomer) {
+    // Müşteri bilgisi
+    const customer = await Customer.findById(id).lean();
+    if (!customer) {
       return res.status(404).json({ message: 'Customer not found' });
     }
 
-    res.status(200).json({ message: 'Customer updated successfully', customer: updatedCustomer });
+    // İlişkili serviceId'leri bul
+    const serviceIds = [
+      ...(await Payment.find({ customerId: id }).distinct('serviceId')),
+      ...(await Appointment.find({ customerId: id }).distinct('serviceId')),
+      ...(await Subscription.find({ customerId: id }).distinct('serviceId')),
+    ];
+
+    // Servisleri getir
+    const services = await Service.find({ _id: { $in: serviceIds } }).lean();
+
+    // İlişkili verileri al
+    const payments = await Payment.find({ customerId: id }).lean();
+    const appointments = await Appointment.find({ customerId: id }).lean();
+    const subscriptions = await Subscription.find({ customerId: id }).lean();
+
+    // Tüm veriyi döndür
+    res.status(200).json({
+      ...customer,
+      services,
+      payments,
+      appointments,
+      subscriptions,
+    });
   } catch (error) {
-    console.error('Error updating customer:', error);
+    console.error('Error fetching customer details:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

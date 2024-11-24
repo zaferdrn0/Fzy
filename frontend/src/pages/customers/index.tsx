@@ -13,12 +13,8 @@ const CustomerList: NextPage = () => {
     getCustomers(setCustomers)
   },[]);
   
-  if(customers === "loading"){
-    return <div>Loading...</div>
-  }
-
   return (
-<CustomerDashboard customers={customers} setCustomers = {setCustomers}/>
+     customers === "loading" ? <div>Loading...</div> :  <CustomerDashboard customers={customers} setCustomers = {setCustomers}/>
   );
 };
 

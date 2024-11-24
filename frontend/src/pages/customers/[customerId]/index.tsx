@@ -31,7 +31,7 @@ if(customer === null){
   return <div>Loading...</div>
 }
 
-  return <CustomerDetail customer={customer} />;
+  return <CustomerDetail customer={customer} setCustomer={setCustomer}/>;
 };
 
 export default CustomerDetailPage;

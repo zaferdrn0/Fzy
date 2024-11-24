@@ -1,160 +1,183 @@
-import { useState } from 'react';
-import {
-    Box,
-    Tab,
-    Tabs,
-    Card,
-    List,
-    ListItem,
-    ListItemText,
-    Grid,
-} from '@mui/material';
+import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import { Box, Tab, Tabs, Card, Grid, Typography, Avatar, Divider, CardContent, Button } from '@mui/material';
 import { Icon } from '@iconify/react';
-import { Customer } from '@/models/dataType';
-import UserInfoCard from './customerDetail/UserInfoCard';
-import MemberShipDetail from './customerDetail/MemberShipDetail';
-import EventTab from './customerDetail/Event';
-import PaymentTab from './customerDetail/Payment';
-import ServiceTab from './customerDetail/Service';
+import { Customer, Service } from '@/models/dataType';
+import { calculateAge } from '@/utils/calculateAge';
+import { fetchBackendGET } from '@/utils/backendFetch';
+import CustomerOverview from './OverviewTab/OverviewTabMenu';
+import CustomerServices from './ServicesTab/CustomerServices';
+import CustomerSubscriptions from './SubscriptionTab/CustomerSubscriptions';
+import CustomerAppointments from './AppointmentTab/CustomerAppointment';
+import CustomerPayments from './PaymentTab/CustomerPayment';
 
+// TabPanel Component
 interface TabPanelProps {
-    children?: React.ReactNode;
-    index: number;
-    value: number;
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
 
 function TabPanel(props: TabPanelProps) {
-    const { children, value, index, ...other } = props;
-
-    return (
-        <div
-            role="tabpanel"
-            hidden={value !== index}
-            {...other}
-        >
-            {value === index && (
-                <Box sx={{ p: 3 }}>
-                    {children}
-                </Box>
-            )}
-        </div>
-    );
+  const { children, value, index, ...other } = props;
+  return (
+    <div role="tabpanel" hidden={value !== index} {...other}>
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
 }
 
+// Main CustomerDetail Component
 interface CustomerDetailProps {
-    customer: Customer;
+  customer: Customer;
+  setCustomer: Dispatch<SetStateAction<Customer | null>>;
 }
 
+const CustomerDetail: React.FC<CustomerDetailProps> = ({ customer, setCustomer }) => {
+  const [tabValue, setTabValue] = useState(0);
+  const [services, setServices] = useState<Service[] | null>(null);
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
-const CustomerDetail = ({ customer }: CustomerDetailProps) => {
-    const [tabValue, setTabValue] = useState(0);
+  const getServices = async () => {
+    try {
+      const response = await fetchBackendGET(`/service/list`);
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data);
+      } else {
+        console.error('Failed to fetch services');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-        setTabValue(newValue);
-    };
+  useEffect(() => {
+    getServices();
+  }, []);
 
-    const today = new Date();
+  return (
+    <Box sx={{ p: 3 }}>
+      <Grid container spacing={3}>
+        {/* Customer Info Card */}
+        <Grid item xs={12} sm={12} md={12} lg={3} xl={3}>
+        <Card sx={{ maxWidth: 400, mx: 'auto', p: 3, borderRadius: 2, boxShadow: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+        <Avatar
+          sx={{ width: 100, height: 100, mb: 2 }}
+          src="/default-avatar.png" // Varsayılan avatar
+          alt={`${customer.name} ${customer.surname}`}
+        />
+        <Typography variant="h5" fontWeight="bold">
+          {`${customer.name} ${customer.surname}`}
+        </Typography>
+        <Typography
+          variant="body2"
+          color="textSecondary"
+          sx={{ backgroundColor: '#f5f5f5', borderRadius: '12px', px: 2, py: 1, mt: 1 }}
+        >
+          {customer.isActive ? 'Active' : 'Inactive'}
+        </Typography>
+      </Box>
+      <Divider sx={{ my: 3 }} />
+      <CardContent>
+        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+          Detaylar
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          <strong>E-posta:</strong> {customer.email}
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          <strong>Telefon:</strong> {customer.phone}
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          <strong>Yaş:</strong> {calculateAge(customer.birthDate)}
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          <strong>Ağırlık:</strong> {customer.weight} kg
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          <strong>Adres:</strong> {`${customer.address.street}, ${customer.address.city}, ${customer.address.postalCode}`}
+        </Typography>
+      </CardContent>
+      <Divider sx={{ my: 3 }} />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+        <Button variant="outlined" color="primary">
+          Edit
+        </Button>
+        <Button variant="outlined" color="error">
+          Suspend
+        </Button>
+      </Box>
+    </Card>
+        </Grid>
 
-    const getAllSessionsAndAppointments = () => {
-        const allEvents = customer.services.flatMap((service) =>
-            service.events
-                .filter((event) => new Date(event.date) < today) // Bugünün tarihinden önceki etkinlikleri al
-                .map((event) => ({
-                    type: 'Event',
-                    date: event.date,
-                    serviceType: service.serviceType,
-                    notes: event.notes,
-                    status: event.status,
-                }))
-        );
+        {/* Tabs and Content */}
+        <Grid item xs={12} sm={12} md={12} lg={9} xl={9}>
+          <Card>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              sx={{ borderBottom: 1, borderColor: 'divider' }}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              <Tab
+                label="Genel Bakış"
+                icon={<Icon icon="mdi:account-details" />}
+                iconPosition="start"
+              />
+              <Tab
+                label="Hizmetler"
+                icon={<Icon icon="mdi:medical-bag" />}
+                iconPosition="start"
+              />
+              <Tab
+                label="Abonelikler"
+                icon={<Icon icon="mdi:subscription" />}
+                iconPosition="start"
+              />
+              <Tab
+                label="Randevular"
+                icon={<Icon icon="mdi:calendar-clock" />}
+                iconPosition="start"
+              />
+              <Tab
+                label="Ödemeler"
+                icon={<Icon icon="mdi:currency-usd" />}
+                iconPosition="start"
+              />
+            </Tabs>
 
-        const allPayments = customer.services.flatMap((service) =>
-            service.payments
-                .filter((payment) => new Date(payment.date) < today) // Bugünün tarihinden önceki ödemeleri al
-                .map((payment) => ({
-                    type: 'Payment',
-                    date: payment.date,
-                    serviceType: service.serviceType,
-                    notes: null,
-                    status: `${payment.amount} TL`, // Ödemeler için tutarı göster
-                }))
-        );
+            {/* Tab Content */}
+            <TabPanel value={tabValue} index={0}>
+              <CustomerOverview />
+            </TabPanel>
+            <TabPanel value={tabValue} index={1}>
+              <CustomerServices />
+            </TabPanel>
+            <TabPanel value={tabValue} index={2}>
+              <CustomerSubscriptions
+                services={services}
+              />
+            </TabPanel>
+            <TabPanel value={tabValue} index={3}>
+              <CustomerAppointments
+                services={services}
+              />
+            </TabPanel>
+            <TabPanel value={tabValue} index={4}>
+              <CustomerPayments
+                services={services}
+              />
+            </TabPanel>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
 
-        return [...allEvents, ...allPayments].sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() // Tarihe göre sıralama (yeniden eskiye)
-        );
-    };
-
-
-
-
-    return (
-        <Box sx={{ p: 3 }}>
-            <Grid container spacing={3}>
-                {/* Left Side - User Info */}
-                <Grid item xs={12} sm={12} md={12} lg={3} xl={3}>
-                    <UserInfoCard customer={customer} />
-                </Grid>
-                {/* Right Side - Tabs & Content */}
-                <Grid item xs={12} sm={12} md={12} lg={9} xl={9}>
-                    <Card>
-                        <Tabs
-                            value={tabValue}
-                            onChange={handleTabChange}
-                            sx={{ borderBottom: 1, borderColor: 'divider' }}
-                        >
-                            <Tab label="Overview" icon={<Icon icon="mdi:account-details" />} iconPosition="start" />
-                            <Tab label="Services" icon={<Icon icon="mdi:medical-bag" />} iconPosition="start" />
-                            <Tab label="Sessions & Appointments" icon={<Icon icon="mdi:calendar" />} iconPosition="start" />
-                            <Tab label="Payments" icon={<Icon icon="mdi:currency-usd" />} iconPosition="start" />
-                            <Tab label="History" icon={<Icon icon="mdi:history" />} iconPosition="start" />
-                        </Tabs>
-
-                        {/* Overview Tab */}
-                        <TabPanel value={tabValue} index={0}>
-                            <MemberShipDetail customer={customer} />
-                        </TabPanel>
-
-                        {/* Services Tab */}
-                        <Grid container spacing={3}>
-                            -
-                            <Grid item lg={12}>
-                                <TabPanel value={tabValue} index={1}>
-                                    <ServiceTab customer={customer} />
-                                </TabPanel>
-                            </Grid>
-                        </Grid>
-
-
-                        {/* Sessions & Appointments Tab */}
-                        <TabPanel value={tabValue} index={2}>
-                            <EventTab customer={customer} />
-                        </TabPanel>
-
-                        {/* Payments Tab */}
-                        <TabPanel value={tabValue} index={3}>
-                            <PaymentTab customer={customer} />
-                        </TabPanel>
-
-                        {/* History Tab */}
-                        <TabPanel value={tabValue} index={4}>
-                            <List>
-                                {getAllSessionsAndAppointments().map((item, index) => (
-                                    <ListItem key={index}>
-                                        <ListItemText
-                                            primary={`${item.serviceType} - ${item.type}`}
-                                            secondary={`${new Date(item.date).toLocaleString()} ${item.notes ? `- ${item.notes}` : ''
-                                                } ${item.status ? `- ${item.status}` : ''}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </TabPanel>
-                    </Card>
-                </Grid>
-            </Grid>
-        </Box>
-    );
-}
-export default CustomerDetail
+export default CustomerDetail;

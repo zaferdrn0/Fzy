@@ -8,45 +8,75 @@ import {
   Paper,
   Modal,
   Fade,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 
 interface AddCustomerModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: Record<string, any>) => void; // Veriyi dışarıya aktarmak için
+  onSubmit: (data: Record<string, any>) => void;
 }
 
 const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ open, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
+    surname: '',
     email: '',
     phone: '',
     birthDate: '',
     weight: '',
+    address: {
+      street: '',
+      city: '',
+      postalCode: '',
+    },
   });
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Responsive kontrol
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  
+    if (name.startsWith('address.')) {
+      const field = name.split('.')[1]; // "address.street" -> "street"
+      setFormData((prev) => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [field]: value, // Sadece ilgili adres alanını güncelle
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value, // Diğer alanları güncelle
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit(formData); 
-    setFormData({ firstName: '', lastName: '', email: '', phone: '', birthDate: '', weight: '' }); // Formu temizle
-    onClose(); 
+    onSubmit(formData);
+    setFormData({
+      name: '',
+      surname: '',
+      email: '',
+      phone: '',
+      birthDate: '',
+      weight: '',
+      address: {
+        street: '',
+        city: '',
+        postalCode: '',
+      },
+    }); // Formu temizle
+    onClose();
   };
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      closeAfterTransition
-    >
+    <Modal open={open} onClose={onClose} closeAfterTransition>
       <Fade in={open}>
         <Paper
           elevation={3}
@@ -55,7 +85,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ open, onClose, onSu
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 600,
+            width: isMobile ? '90%' : 600,
             padding: 4,
           }}
         >
@@ -66,9 +96,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ open, onClose, onSu
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="First Name"
-                  name="firstName"
-                  value={formData.firstName}
+                  label="Name"
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   fullWidth
                   required
@@ -76,9 +106,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ open, onClose, onSu
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Last Name"
-                  name="lastName"
-                  value={formData.lastName}
+                  label="Surname"
+                  name="surname"
+                  value={formData.surname}
                   onChange={handleChange}
                   fullWidth
                   required
@@ -97,7 +127,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ open, onClose, onSu
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Phone Number"
+                  label="Phone"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
@@ -128,6 +158,38 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ open, onClose, onSu
                   onChange={handleChange}
                   fullWidth
                   required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Address
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Street"
+                  name="address.street"
+                  value={formData.address.street}
+                  onChange={handleChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="City"
+                  name="address.city"
+                  value={formData.address.city}
+                  onChange={handleChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Postal Code"
+                  name="address.postalCode"
+                  value={formData.address.postalCode}
+                  onChange={handleChange}
+                  fullWidth
                 />
               </Grid>
               <Grid item xs={12}>
