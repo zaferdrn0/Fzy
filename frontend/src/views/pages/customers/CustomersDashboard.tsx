@@ -30,13 +30,12 @@ const CustomerDashboard = ({
         }
         return prevCustomers; // Eğer değilse mevcut durumu koru
       });
-      console.log('Customer added successfully');
+      console.log('Müşteri başarıyla eklendi');
       handleClose();
     } else {
-      console.error('Failed to add customer');
+      console.error('Müşteri eklenirken hata oluştu');
     }
   };
-  
 
   return (
     <Box sx={{ p: 3 }}>
@@ -44,14 +43,14 @@ const CustomerDashboard = ({
 
       {/* Customers Table */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5">Customers</Typography>
+        <Typography variant="h5">Müşteriler</Typography>
         <Button
           variant="contained"
           onClick={handleOpen}
           startIcon={<Icon icon="mdi:plus" />}
           sx={{ borderRadius: 2 }}
         >
-          Add New Customer
+          Yeni Müşteri Ekle
         </Button>
       </Box>
 
@@ -59,27 +58,28 @@ const CustomerDashboard = ({
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Active Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>Ad ve Soyad</TableCell>
+              <TableCell>E-posta</TableCell>
+              <TableCell>Telefon</TableCell>
+              <TableCell>Aktif Durum</TableCell>
+              <TableCell align="right">İşlemler</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {customers.map((customer) => (
-              <TableRow key={customer._id}>
+              <TableRow
+                key={customer._id}
+                hover
+                sx={{ cursor: 'pointer' }}
+                onClick={() => router.push(`/customers/${customer._id}`)} // Satır tıklamasıyla yönlendirme
+              >
                 {/* Name and Surname */}
-                <TableCell>
-                  {customer.name} {customer.surname}
-                </TableCell>
+                <TableCell>{customer.name} {customer.surname}</TableCell>
                 {/* Email */}
                 <TableCell>{customer.email}</TableCell>
                 {/* Phone */}
                 <TableCell>{customer.phone}</TableCell>
 
-                {/* Total Spent */}
-               
                 {/* Active Status */}
                 <TableCell>
                   <Typography
@@ -87,12 +87,18 @@ const CustomerDashboard = ({
                       color: customer.isActive ? 'success.main' : 'error.main',
                     }}
                   >
-                    {customer.isActive ? 'Active' : 'Inactive'}
+                    {customer.isActive ? 'Aktif' : 'Pasif'}
                   </Typography>
                 </TableCell>
                 {/* Actions */}
-                <TableCell align="right">
-                  <IconButton size="small">
+                <TableCell
+                  align="right"
+                  onClick={(e) => e.stopPropagation()} // Satır tıklanmasını önlemek için
+                >
+                  <IconButton
+                    size="small"
+                    onClick={() => console.log('Silme işlemi')}
+                  >
                     <Icon icon="mdi:delete" />
                   </IconButton>
                   <IconButton

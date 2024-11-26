@@ -20,6 +20,7 @@ import {
     TextField,
     Card,
     CardContent,
+    Chip,
 } from '@mui/material';
 import { Icon } from '@iconify/react';
 import { Customer, Service, Appointment } from '@/models/dataType';
@@ -78,27 +79,27 @@ const CustomerAppointments: React.FC<CustomerAppointmentsProps> = ({
                 status: statusToUpdate,
                 notes: notesToUpdate[appointmentId], // Güncellenmiş notes
             });
-    
+
             if (response.ok) {
                 const { appointment } = await response.json(); // Yanıttan `appointment` objesini al
-    
+
                 // appointments state'ini güncelle
                 setAppointments((prev) =>
                     prev
                         ? prev.map((appt) =>
-                              appt._id === appointment._id ? appointment : appt
-                          )
+                            appt._id === appointment._id ? appointment : appt
+                        )
                         : null
                 );
-    
+
                 // Güncellenmiş randevuyu overdue listeden çıkar
                 setOverdueAppointments((prev) =>
                     prev.filter((appt) => appt._id !== appointmentId)
                 );
-    
+
                 // Modalı kapat
                 setOpenOverdueDialog((prev) => overdueAppointments.length <= 1 ? false : prev);
-    
+
                 alert('Appointment status and notes updated successfully.');
             } else {
                 const error = await response.json();
@@ -127,19 +128,19 @@ const CustomerAppointments: React.FC<CustomerAppointmentsProps> = ({
     }) => {
         try {
             const response = await fetchBackendPUT(`/appointment/${data.appointmentId}`, data);
-    
+
             if (response.ok) {
                 const { appointment } = await response.json(); // Yanıttan `appointment` objesini al
-    
+
                 // appointments state'ini güncelle
                 setAppointments((prev) =>
                     prev
                         ? prev.map((appt) =>
-                              appt._id === appointment._id ? appointment : appt
-                          )
+                            appt._id === appointment._id ? appointment : appt
+                        )
                         : null
                 );
-    
+
                 alert('Appointment updated successfully.');
             } else {
                 const error = await response.json();
@@ -150,21 +151,21 @@ const CustomerAppointments: React.FC<CustomerAppointmentsProps> = ({
             alert('An unexpected error occurred while updating the appointment.');
         }
     };
-        
+
     const handleAddAppointment = async (appointmentData: any) => {
         try {
             const response = await fetchBackendPOST('/appointment/add', appointmentData);
-    
+
             if (response.ok) {
                 const { appointment } = await response.json(); // Yanıt içindeki `appointment` nesnesini al
-    
+
                 // appointments state'ine ekle
                 setAppointments((prev) =>
                     prev ? [...prev, appointment] : [appointment]
                 );
-    
+
                 alert('Appointment added successfully.');
-                setOpenAppointmentModal(false); 
+                setOpenAppointmentModal(false);
             } else {
                 const error = await response.json();
                 alert(`Error adding appointment: ${error.message}`);
@@ -337,22 +338,52 @@ const CustomerAppointments: React.FC<CustomerAppointmentsProps> = ({
             {filteredAppointments.length > 0 ? (
                 <List>
                     {filteredAppointments.map((appointment) => {
-
+                        const remainingBalance = appointment.remainingBalance || 0; // Backend'den gelen kalan borç bilgisi
+                        const isPaid = remainingBalance <= 0; // Ödenmiş mi kontrolü
 
                         return (
                             <ListItem key={appointment._id} sx={{ borderBottom: '1px solid #e0e0e0' }}>
-                                <ListItemText
-                                    primary={appointment.serviceType}
-                                    secondary={`Tarih ve Saat: ${new Date(
-                                        appointment.date
-                                    ).toLocaleString('tr-TR', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })} | Durum: ${appointment.status}`}
-                                />
+                              <ListItemText
+  primary={
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Typography variant="h6" sx={{ mr: 1 }}>
+        {appointment.serviceType}
+      </Typography>
+      {appointment.subscriptionId && (
+        <Chip
+          label="Abone"
+          color="primary"
+          size="small"
+          sx={{ ml: 1,mb: 1 }}
+        />
+      )}
+    </Box>
+  }
+  secondary={
+    <>
+      <Typography variant="body2" color="textSecondary">
+        {`Tarih ve Saat: ${new Date(appointment.date).toLocaleString('tr-TR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })}`}
+      </Typography>
+      <Typography variant="body2" color="textSecondary">
+        {`Durum: ${appointment.status}`}
+      </Typography>
+      <Typography
+        variant="body2"
+        color={appointment.remainingBalance <= 0 ? 'success.main' : 'error.main'}
+      >
+        {appointment.remainingBalance <= 0
+          ? 'Ödendi'
+          : `Kalan Borç: ${appointment.remainingBalance} TL`}
+      </Typography>
+    </>
+  }
+/>
                                 <Button
                                     sx={{ mr: 3 }}
                                     onClick={() => {
@@ -383,6 +414,7 @@ const CustomerAppointments: React.FC<CustomerAppointmentsProps> = ({
             ) : (
                 <Typography color="text.secondary">Randevu bulunmamaktadır.</Typography>
             )}
+
         </div>
     );
 };

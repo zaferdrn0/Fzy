@@ -1,5 +1,5 @@
 :root {
-  --scale-factor: 0.9;
+  --scale-factor: 1;
   --base-font-size: 16px;
   --min-scale: 0.6; 
 }
@@ -129,7 +129,15 @@ code[class*='language-'] {
 }
 
 .px-scaled {
-  font-size: calc(16px * var(--scale-factor));
-  padding: calc(10px * var(--scale-factor));
-  margin: calc(20px * var(--scale-factor));
+  font-size: calc(16px * var(--scale-factor));  
+}
+
+.css-13r3nxi{
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.css-19kzrtu {
+padding: 5 !important;
+margin:0 !important;
 }

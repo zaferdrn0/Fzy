@@ -42,12 +42,13 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         serviceId: '',
         subscriptionId: '',
         appointmentId: '',
-        amount: 0,
+        amount: '',
         date: '',
     });
     const [filteredSubscriptions, setFilteredSubscriptions] = useState<Subscription[]>([]);
     const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const [remainingBalance, setRemainingBalance] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -89,30 +90,74 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
             setFilteredAppointments(appts);
 
             setFormData((prev) => ({ ...prev, serviceId: selectedService, subscriptionId: '', appointmentId: '' }));
+            setRemainingBalance(null); // Reset remaining balance
         } else {
             setFilteredSubscriptions([]);
             setFilteredAppointments([]);
         }
     }, [selectedService, subscriptions, appointments]);
 
-    const handleChange = (e: { target: { name: any; value: any } }) => {
+    useEffect(() => {
+        // Backend'den gelen `remainingBalance` değerini al
+        if (formData.subscriptionId) {
+            const subscription = filteredSubscriptions.find((sub) => sub._id === formData.subscriptionId);
+            if (subscription) setRemainingBalance(subscription.remainingBalance || 0);
+        } else if (formData.appointmentId) {
+            const appointment = filteredAppointments.find((appt) => appt._id === formData.appointmentId);
+            if (appointment) setRemainingBalance(appointment.remainingBalance || 0);
+        } else {
+            setRemainingBalance(null);
+        }
+    }, [formData.subscriptionId, formData.appointmentId, filteredSubscriptions, filteredAppointments]);
+
+    const handleChange = (e: { target: { name: string; value: string } }) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+
+        if (name === 'subscriptionId') {
+            // Abonelik seçildiğinde randevu temizlenir
+            setFormData((prev) => ({ ...prev, subscriptionId: value, appointmentId: '' }));
+        } else if (name === 'appointmentId') {
+            // Randevu seçildiğinde abonelik temizlenir
+            setFormData((prev) => ({ ...prev, appointmentId: value, subscriptionId: '' }));
+        } else if (name === 'amount' && remainingBalance !== null && +value > remainingBalance) {
+            // Miktar kontrolü
+            alert(`Girilen miktar kalan borçtan fazla olamaz! (${remainingBalance} TL)`);
+            return;
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = () => {
-        if (!formData.serviceId) {
+        const { serviceId, subscriptionId, appointmentId, amount, date } = formData;
+
+        if (!serviceId) {
             alert('Lütfen bir hizmet seçin.');
+            return;
+        }
+
+        if (!amount || +amount <= 0) {
+            alert('Lütfen geçerli bir miktar girin.');
+            return;
+        }
+
+        if (!date) {
+            alert('Lütfen bir tarih seçin.');
+            return;
+        }
+
+        if (!subscriptionId && !appointmentId) {
+            alert('Lütfen bir abonelik veya randevu seçin.');
             return;
         }
 
         onSubmit({
             customerId,
-            serviceId: formData.serviceId,
-            subscriptionId: formData.subscriptionId || undefined,
-            appointmentId: formData.appointmentId || undefined,
-            amount: formData.amount,
-            date: formData.date,
+            serviceId,
+            subscriptionId: subscriptionId || undefined,
+            appointmentId: appointmentId || undefined,
+            amount: +amount,
+            date,
         });
         onClose();
     };
@@ -149,7 +194,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                 </FormControl>
                 {selectedService && (
                     <>
-                        {filteredSubscriptions.length > 0 && (
+                        {filteredSubscriptions.length > 0 && !formData.appointmentId && (
                             <FormControl fullWidth sx={{ mb: 2 }}>
                                 <InputLabel>Abonelik</InputLabel>
                                 <Select
@@ -160,14 +205,20 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                                 >
                                     <MenuItem value="">Seçim Yok</MenuItem>
                                     {filteredSubscriptions.map((sub) => (
-                                        <MenuItem key={sub._id} value={sub._id}>
-                                            {sub._id} - {new Date(sub.startDate).toLocaleDateString()}
+                                        <MenuItem
+                                            key={sub._id}
+                                            value={sub._id}
+                                            disabled={sub.remainingBalance <= 0} // Kalan borç 0 veya negatifse disable
+                                        >
+                                            {`${sub._id} - ${new Date(sub.startDate).toLocaleDateString()} - ${sub.remainingBalance > 0 ? `${sub.remainingBalance} TL` : 'Ödendi'
+                                                }`}
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         )}
-                        {filteredAppointments.length > 0 && (
+
+                        {filteredAppointments.length > 0 && !formData.subscriptionId && (
                             <FormControl fullWidth sx={{ mb: 2 }}>
                                 <InputLabel>Randevu</InputLabel>
                                 <Select
@@ -178,16 +229,22 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                                 >
                                     <MenuItem value="">Seçim Yok</MenuItem>
                                     {filteredAppointments.map((appt) => (
-                                        <MenuItem key={appt._id} value={appt._id}>
-                                            {new Date(appt.date).toLocaleDateString()} - {appt.status}
+                                        <MenuItem
+                                            key={appt._id}
+                                            value={appt._id}
+                                            disabled={appt.remainingBalance <= 0} // Kalan borç 0 veya negatifse disable
+                                        >
+                                            {`${new Date(appt.date).toLocaleDateString()} - ${appt.status} - ${appt.remainingBalance > 0 ? `${appt.remainingBalance} TL` : 'Ödendi'
+                                                }`}
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         )}
+
                         <TextField
                             fullWidth
-                            label="Miktar"
+                            label={`Miktar (Kalan Borç: ${remainingBalance || 0} TL)`}
                             name="amount"
                             type="number"
                             value={formData.amount}
@@ -204,7 +261,12 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                         />
                     </>
                 )}
-                <Button fullWidth variant="contained" onClick={handleSubmit} disabled={!formData.serviceId}>
+                <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={handleSubmit}
+                    disabled={!formData.serviceId}
+                >
                     Ekle
                 </Button>
             </Box>

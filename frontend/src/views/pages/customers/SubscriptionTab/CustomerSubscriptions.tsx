@@ -148,55 +148,81 @@ const CustomerSubscriptions: React.FC<CustomerSubscriptionsProps> = ({
       />
       <Divider sx={{ my: 2 }} />
       {subscriptions && subscriptions?.length > 0 ? (
-        <List>
-          {subscriptions?.map((subscription) => {
-            const serviceType = subscription.serviceType ? capitalizeFirstLetter(subscription.serviceType) : "Bilinmiyor";
+    <List>
+        {subscriptions?.map((subscription) => {
+            const serviceType = subscription.serviceType
+                ? capitalizeFirstLetter(subscription.serviceType)
+                : 'Bilinmiyor';
 
             const { isActive, daysLeft } = getMembershipStatus(
-              subscription.startDate,
-              subscription.durationDays
+                subscription.startDate,
+                subscription.durationDays
             );
+
+            const remainingBalance = subscription.remainingBalance || 0; // Backend'den kalan borç bilgisi
+            const isPaid = remainingBalance <= 0; // Ödenmiş mi kontrolü
 
             return (
-              <ListItem key={subscription._id} sx={{ borderBottom: '1px solid #e0e0e0' }}>
-                <ListItemText
-                  primary={serviceType}
-                  secondary={`Başlangıç: ${new Date(
-                    subscription.startDate
-                  ).toLocaleDateString()} | Kalan Gün: ${daysLeft}`}
-                />
+                <ListItem key={subscription._id} sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                    <ListItemText
+                        primary={
+                            <>
+                                <Typography variant="h6">{serviceType}</Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    {`Abonelik ID: ${subscription._id}`}
+                                </Typography>
+                            </>
+                        }
+                        secondary={
+                            <>
+                                <Typography variant="body2" color="textSecondary">
+                                    {`Başlangıç: ${new Date(subscription.startDate).toLocaleDateString()}`}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    {`Kalan Gün: ${daysLeft}`}
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    color={isPaid ? 'success.main' : 'error.main'}
+                                >
+                                    {isPaid ? 'Ödendi' : `Kalan Borç: ${remainingBalance} TL`}
+                                </Typography>
+                            </>
+                        }
+                    />
 
-                <Chip label={isActive ? 'Aktif' : 'Pasif'} color={isActive ? 'success' : 'default'} />
+                    <Chip label={isActive ? 'Aktif' : 'Pasif'} color={isActive ? 'success' : 'default'} />
 
-                <Button
-                  sx={{ mr: 3 ,ml:3}}
-                  onClick={() => {
-                    setSelectedSubscription(subscription);
-                    setOpenSubscriptionUpdateModal(true);
-                  }}
-                  variant="contained"
-                  color="info"
-                  size="small"
-                  startIcon={<Icon icon="mdi:pencil" />}
-                >
-                  Düzenle
-                </Button>
-                <Button
-                  onClick={() => handleDeleteSubscription(subscription._id)}
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  startIcon={<Icon icon="mdi:delete" />}
-                >
-                  Sil
-                </Button>
-              </ListItem>
+                    <Button
+                        sx={{ mr: 3, ml: 3 }}
+                        onClick={() => {
+                            setSelectedSubscription(subscription);
+                            setOpenSubscriptionUpdateModal(true);
+                        }}
+                        variant="contained"
+                        color="info"
+                        size="small"
+                        startIcon={<Icon icon="mdi:pencil" />}
+                    >
+                        Düzenle
+                    </Button>
+                    <Button
+                        onClick={() => handleDeleteSubscription(subscription._id)}
+                        variant="contained"
+                        color="error"
+                        size="small"
+                        startIcon={<Icon icon="mdi:delete" />}
+                    >
+                        Sil
+                    </Button>
+                </ListItem>
             );
-          })}
-        </List>
-      ) : (
-        <Typography color="text.secondary">Aktif abonelik bulunmamaktadır.</Typography>
-      )}
+        })}
+    </List>
+) : (
+    <Typography color="text.secondary">Aktif abonelik bulunmamaktadır.</Typography>
+)}
+
     </div>
   );
 };

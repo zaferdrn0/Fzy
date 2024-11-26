@@ -59,6 +59,7 @@ export interface Subscription {
   durationDays: number;
   startDate: string;
   sessionLimit: number;
+  remainingBalance:number
   makeupSessions: number;
   fee: number;
   createdAt: string;
@@ -76,6 +77,7 @@ export interface Appointment {
   notes?: string; // Notlar (opsiyonel)
   fee: number; // Ücret
   isPaid: boolean; // Ödeme durumu
+  remainingBalance:number;
   doctorReport?: {
     diagnosis?: string; // Doktor teşhisi (opsiyonel)
     injuryType?: string; // Yaralanma türü (opsiyonel)

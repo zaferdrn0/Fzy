@@ -25,7 +25,7 @@ const CustomerPayments: React.FC<CustomerPaymentsProps> = ({ services }) => {
     const [openPaymentModal, setOpenPaymentModal] = useState<boolean>(false);
     const [openUpdatePaymentModal, setOpenUpdatePaymentModal] = useState<boolean>(false);
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-    const router = useRouter()
+    const router = useRouter();
     const { customerId } = router.query;
 
     const fetchPayments = async () => {
@@ -135,13 +135,29 @@ const CustomerPayments: React.FC<CustomerPaymentsProps> = ({ services }) => {
                     {payments.map((payment) => {
                         const service = services?.find((s) => s._id === payment.serviceId);
                         const serviceType = service ? capitalizeFirstLetter(service.type) : 'Bilinmiyor';
+                        const details =
+                            payment.subscriptionId
+                                ? `Abonelik ID: ${payment.subscriptionId}`
+                                : payment.appointmentId
+                                ? `Randevu ID: ${payment.appointmentId}`
+                                : 'Genel Ödeme';
+
                         return (
                             <ListItem key={payment._id} sx={{ borderBottom: '1px solid #e0e0e0' }}>
                                 <ListItemText
-                                    primary={serviceType}
-                                    secondary={`Tutar: ${payment.amount} TL | Tarih: ${new Date(
-                                        payment.date
-                                    ).toLocaleDateString()}`}
+                                    primary={`Hizmet: ${serviceType}`}
+                                    secondary={
+                                        <>
+                                            <Typography variant="body2" color="textSecondary">
+                                                {`Tutar: ${payment.amount} TL | Tarih: ${new Date(
+                                                    payment.date
+                                                ).toLocaleDateString()}`}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                {details}
+                                            </Typography>
+                                        </>
+                                    }
                                 />
                                 <Button
                                     sx={{ mr: 3 }}
