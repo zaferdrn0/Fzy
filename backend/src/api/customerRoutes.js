@@ -87,4 +87,81 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/dashboard/:customerId', authenticate, async (req, res) => {
+  const { customerId } = req.params;
+
+  try {
+    // Fetch customer
+    const customer = await Customer.findById(customerId).lean();
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    // Upcoming appointments (next 5)
+    const upcomingAppointments = await Appointment.find({
+      customerId,
+      date: { $gte: new Date() },
+    })
+      .sort({ date: 1 })
+      .limit(5)
+      .populate('serviceId', 'type description')
+      .lean();
+
+    // Fetch active subscriptions
+    const subscriptions = await Subscription.find({
+      customerId,
+      // Optionally, you can add conditions to find active subscriptions based on date
+    }).lean();
+
+    // For each subscription, calculate sessions attended and missed
+    const subscriptionsData = await Promise.all(
+      subscriptions.map(async (sub) => {
+        // Find appointments linked to this subscription
+        const appointments = await Appointment.find({
+          subscriptionId: sub._id,
+        }).lean();
+    
+        // Count sessions attended, missed, and upcoming
+        const sessionsAttended = appointments.filter(
+          (appt) => appt.status === 'Geldi'
+        ).length;
+        const sessionsMissed = appointments.filter(
+          (appt) => appt.status === 'Gelmedi'
+        ).length;
+        const upcomingSessions = appointments.filter(
+          (appt) => appt.status === 'İleri Tarihli'
+        ).length;
+    
+        return {
+          subscriptionId: sub._id,
+          startDate: sub.startDate,
+          durationDays: sub.durationDays,
+          sessionLimit: sub.sessionLimit,
+          sessionsAttended,
+          sessionsMissed,
+          upcomingSessions,
+          progress: (sessionsAttended / sub.sessionLimit) * 100,
+        };
+      })
+    );
+    
+    // Recent payments (last 5)
+    const recentPayments = await Payment.find({ customerId })
+      .sort({ date: -1 })
+      .limit(5)
+      .populate('serviceId', 'type description')
+      .lean();
+
+    res.status(200).json({
+      customer,
+      upcomingAppointments,
+      subscriptions: subscriptionsData,
+      recentPayments,
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 export default router;

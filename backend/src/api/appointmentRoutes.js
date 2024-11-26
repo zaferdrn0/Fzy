@@ -8,29 +8,52 @@ router.get('/:customerId', authenticate, async (req, res) => {
     const { customerId } = req.params;
   
     try {
-      // Appointmentları getir ve Service bilgilerini ilişkilendir
+      // Appointmentları getir ve Service ve Subscription bilgilerini ilişkilendir
       const appointments = await Appointment.find({ customerId })
         .populate('serviceId', 'type description') // Service modelinden sadece type ve description alanlarını al
+        .populate('subscriptionId', 'durationDays startDate') // Subscription bilgilerini ilişkilendir
         .lean();
   
       if (!appointments || appointments.length === 0) {
         return res.status(404).json({ message: 'No appointments found for this customer.' });
       }
   
-      // Yanıtı düzenli bir formata dönüştür
-      const formattedAppointments = appointments.map((appt) => ({
-        _id: appt._id,
-        date: appt.date,
-        status: appt.status,
-        notes: appt.notes,
-        fee: appt.fee,
-        isPaid: appt.isPaid,
-        serviceType: appt.serviceId.type,
-        serviceDescription: appt.serviceId.description,
-        doctorReport: appt.doctorReport,
-        massageDetails: appt.massageDetails,
-        createdAt: appt.createdAt,
-      }));
+      // Her bir randevu için ödeme bilgilerini bul
+      const formattedAppointments = await Promise.all(
+        appointments.map(async (appt) => {
+          // Ödeme toplamını hesapla
+          const totalPaid = await Payment.aggregate([
+            { $match: { appointmentId: appt._id } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+          ]);
+  
+          const paidAmount = totalPaid.length > 0 ? totalPaid[0].total : 0;
+  
+          return {
+            _id: appt._id,
+            date: appt.date,
+            status: appt.status,
+            notes: appt.notes,
+            fee: appt.fee,
+            isPaid: appt.isPaid,
+            serviceType: appt.serviceId.type,
+            serviceId: appt.serviceId._id,
+            serviceDescription: appt.serviceId.description,
+            subscriptionId: appt.subscriptionId?._id || null, // Subscription ID ekleme
+            subscriptionDetails: appt.subscriptionId
+              ? {
+                  durationDays: appt.subscriptionId.durationDays,
+                  startDate: appt.subscriptionId.startDate,
+                }
+              : null,
+            isSubscriptionBased: Boolean(appt.subscriptionId), // Subscription'a bağlı mı kontrolü
+            doctorReport: appt.doctorReport,
+            massageDetails: appt.massageDetails,
+            createdAt: appt.createdAt,
+            remainingBalance: appt.fee - paidAmount, // Kalan borç
+          };
+        })
+      );
   
       res.status(200).json(formattedAppointments);
     } catch (error) {
@@ -38,6 +61,8 @@ router.get('/:customerId', authenticate, async (req, res) => {
       res.status(500).json({ message: 'Internal server error while fetching appointments.' });
     }
   });
+  
+  
   
   router.post('/add', authenticate, async (req, res) => {
     try {

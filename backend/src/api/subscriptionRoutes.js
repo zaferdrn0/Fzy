@@ -3,7 +3,6 @@ import { authenticate } from '../middleware/authentication.js';
 import { Customer,Appointment,Payment,Service,Subscription } from '../models/index.js';
 
 const router = express.Router();
-
 router.get('/:customerId', authenticate, async (req, res) => {
   const { customerId } = req.params;
 
@@ -17,28 +16,41 @@ router.get('/:customerId', authenticate, async (req, res) => {
       return res.status(404).json({ message: 'No subscriptions found for this customer.' });
     }
 
-    // Dönüşümü yap
-    const formattedSubscriptions = subscriptions.map((sub) => ({
-      _id: sub._id,
-      durationDays: sub.durationDays,
-      startDate: sub.startDate,
-      sessionLimit: sub.sessionLimit,
-      makeupSessions: sub.makeupSessions,
-      fee: sub.fee,
-      createdAt: sub.createdAt,
-      updatedAt: sub.updatedAt,
-      serviceId: sub.serviceId._id,
-      serviceType: sub.serviceId.type, // Service type
-      serviceDescription: sub.serviceId.description, // Service description
-    }));
+    // Her bir abonelik için ödeme bilgilerini bul
+    const formattedSubscriptions = await Promise.all(
+      subscriptions.map(async (sub) => {
+        // Toplam ödemeleri getir
+        const totalPaid = await Payment.aggregate([
+          { $match: { subscriptionId: sub._id } },
+          { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
 
-    // Dönüştürülmüş formatta döndür
+        const paidAmount = totalPaid.length > 0 ? totalPaid[0].total : 0;
+
+        return {
+          _id: sub._id,
+          durationDays: sub.durationDays,
+          startDate: sub.startDate,
+          sessionLimit: sub.sessionLimit,
+          makeupSessions: sub.makeupSessions,
+          fee: sub.fee,
+          createdAt: sub.createdAt,
+          updatedAt: sub.updatedAt,
+          serviceId: sub.serviceId._id,
+          serviceType: sub.serviceId.type, // Service type
+          serviceDescription: sub.serviceId.description, // Service description
+          remainingBalance: sub.fee - paidAmount, // Kalan borç
+        };
+      })
+    );
+
     res.status(200).json(formattedSubscriptions);
   } catch (error) {
     console.error('Error fetching subscriptions:', error);
     res.status(500).json({ message: 'Internal server error while fetching subscriptions.' });
   }
 });
+
 router.post('/add', authenticate, async (req, res) => {
   try {
     const { customerId, serviceId, durationDays, startDate, sessionLimit, fee, makeupSessions } = req.body;
